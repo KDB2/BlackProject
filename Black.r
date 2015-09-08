@@ -85,7 +85,7 @@ Plot <- function(Table, Scale="Lognormale")
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
     # Basé sur les limites, le calculs des etiquettes de l'axe x.
-    GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
+    GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(w-log(lim[2],10))))
 
     # Calcul des etiquettes de l'axe y
     # Etiquettes dynamique en fonction de la probabilité minimale
