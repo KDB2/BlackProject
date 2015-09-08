@@ -1,4 +1,5 @@
-# Collection of scripts to extract Black's parameters from a serie of electromigration experiments
+# Script collection allowing the extraction of Black's parameters
+# using a serie of electromigration experiments.
 # September 2015
 # Emmanuel Chery
 
@@ -8,72 +9,61 @@ library('MASS')
 library('scales')
 
 
-Ranking <- function(V)
-# Calcul de l'estimateur de fraction selon le modèle
-# rk(i)=(i-0.3)/(n+0.4) pour un vecteur V.
+Ranking <- function(TTF)
+# Fraction estimator calculation
+# rk(i)=(i-0.3)/(n+0.4)
+# TTF is a vector.
 {
-    rk <- (rank(V)-0.3)/(length(V)+0.4)
+    rk <- (rank(TTF)-0.3)/(length(TTF)+0.4)
 }
 
 
-Weibit <- function(P)
-# Calcul du Weibit selon le modèle
-# W= ln(-ln(1-P)) pour un vecteur P.
+CalculProbability <- function(Probability, Scale="Lognormale")
+# Given a vector Probability of probabilities, the function calculates
+# the correspondence in standard deviations for the lognormale case.
+# Calculation of the Weibit is made for the Weibull case.
 {
-    W=log(-log(1-P))
+  if (Scale=="Weibull") {
+      Proba <- ln(-ln(1-Probability)) # Weibull
+  } else {
+      Proba <- qnorm(Probability) # Lognormal
+  }
+  return(Proba)
 }
 
 
-LognormProba <- function(P)
-# Calcul de la proba en échelle normal selon le modèle
-# W= qnorm(P) pour un vecteur P. Nécessaire pour un graph
-# gausso arythmétique. Droite de Henri.
+Clean <- function(TTF,Status)
+# TTF and status are vectors and have the same length.
+# Cleaning of the data. Only TTF with a status 1 or 0 are kept.
+# Finally TTF are sorted from the smallest to the largest.
 {
-    W=qnorm(P)
-}
-
-
-Clean <- function(V,S)
-# Nettoyage des temps à la défaillance en fonction du vecteur Status (S)
-# Seuls les temps précédés d'un 0 ou d'un 1 sont conservés.
-# Finallement, on tri les temps et leur status
-{
-    V <- V[S==0 | S==1]
-    S <- S[S==0 | S==1]
-    #Res <- list('TTF'=V,'Status'=S)
-    Res <- data.frame('TTF'=V,'Status'=S)
-    Res <- Res[order(Res$"TTF"),] # Tri selon les TTF
+    TTF <- TTF[Status==0 | Status==1]
+    Status <- Status[Status==0 | Status==1]
+    Res <- data.frame('TTF'=TTF,'Status'=Status)
+    Res <- Res[order(Res$"TTF"),] # Sort TTF
     return(Res)
 }
 
 
-ArrangeLognorm <- function(Status, TTF, Condition)
-# Création d'un dataframe avec le status, le temps à défaillance,
-# la probabilité cumulée pour une fonction lognormale et la condition.
-# Les données sont d'abord nettoyées (Clean), puis la probabité cumulée
-# est calculée.
-{
-    CleanedData <- Clean(TTF,Status) # Nettoyage -- Données triées
-    rk <- Ranking(CleanedData$TTF) # Calcul de l'estimateur de fraction
-    Proba <- LognormProba(rk) # Calcul de la proba en echelle lognormale.
-    Data <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition)
-    return(Data)
-    # Data (TTF,Status,Probability,Condition)
-}
+CreateDataFrame <- function(TTF, Status, Condition, Current, Temperature, Scale="Lognormale")
+# Creation of the dataframe assembling the TTF, the status of the samples,
+# the probability, the condition (stickers for charts),
+# the current and the temperature used durng the stress.
+# The probability is calculated according to lognormale or Weibull distribution.
+# Data are cleaned before probability calculation.
 
-
-ArrangeWeibul <- function(Status, TTF, Condition)
-# Création d'un dataframe avec le status, le temps à défaillance,
-# la probabilité cumulée pour une fonction lognormale et la condition.
-# Les données sont d'abord nettoyées (Clean), puis la probabité cumulée
-# est calculée.
+# Data(TTF,Status,Probability,Condition,Current,Temperature)
 {
-    CleanedData <- Clean(TTF,Status) # Nettoyage -- Données triées
-    rk <- Ranking(CleanedData$TTF) # Calcul de l'estimateur de fraction
-    Proba <- Weibit(rk) # Calcul de la proba en echelle lognormale.
-    Data <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition)
+    CleanedData <- Clean(TTF,Status) # Clean & sort
+    rk <- Ranking(CleanedData$TTF) # Fraction estimator calculation
+    if (Scale=="Weibull") {
+      Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
+    } else {
+      Proba <- CalculProbability(rk,Scale="Lognormale") # Probability calculation Lognormale
+    }
+    # Generation of the final data frame
+    Data <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition, 'Current'=Current, 'Temperature'=Temperature)
     return(Data)
-    # Data (TTF,Status,Probability,Condition)
 }
 
 
