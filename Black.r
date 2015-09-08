@@ -79,6 +79,7 @@ ArrangeWeibul <- function(Status, TTF, Condition)
 
 Plot <- function(Table, Scale="Lognormale")
 # Prend la table de données issue de ArrangeXxxxx et trace le graphe correspondant
+# Le paramètre facultatif Scale permet de tracer une échelle Weibull.
 {
     # Calcul des limites pour le graphe
     lim <- range(Table[,1])
@@ -89,19 +90,42 @@ Plot <- function(Table, Scale="Lognormale")
 
     # Calcul des etiquettes de l'axe y
     # Etiquettes dynamique en fonction de la probabilité minimale
-    if (Table[1,3]<= qnorm(0.1/100)){ # Cas 1: inférieur à 0.1%
-      ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
-    }
-    if (Table[1,3]<= qnorm(1/100) && Table[1,3]>= qnorm(0.1/100)){ # Cas 2: inférieur à 1% mais supérieur à 0.1%
-      ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
-    }
-    if (Table[1,3] >= qnorm(1/100)) { # Cas 3: Supérieur à 1%
-      ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
-    }
+
+    # Cas Weibull
+    if (Scale == "Weibull") {
+        if (Table[1,3]<= Weibit(0.1/100)){ # Cas 1: inférieur à 0.1%
+            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
+        }
+        if (Table[1,3]<= Weibit(1/100) && Table[1,3]>= Weibit(0.1/100)){ # Cas 2: inférieur à 1% mais supérieur à 0.1%
+            ListeProba <- c(0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
+        }
+        if (Table[1,3] >= Weibit(1/100)) { # Cas 3: Supérieur à 1%
+            ListeProba <- c(1,5,10,20,30,40,50,63,70,80,90,95,99)
+        }
+    ProbaNorm <- Weibit(ListeProba/100)
+
+    } else { # Cas distribution lognormale
+        if (Table[1,3]<= qnorm(0.1/100)){ # Cas 1: inférieur à 0.1%
+            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
+        }
+        if (Table[1,3]<= qnorm(1/100) && Table[1,3]>= qnorm(0.1/100)){ # Cas 2: inférieur à 1% mais supérieur à 0.1%
+            ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
+        }
+        if (Table[1,3] >= qnorm(1/100)) { # Cas 3: Supérieur à 1%
+            ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
+        }
     ProbaNorm <- qnorm(ListeProba/100)
+    }
+
+    # Création du sous ensemble avec les temps où le status est à 1.
+    # La table est triée pour que les conditions soient continues.
+    Table <- Table[Table$Status==1,]
+    Table <- Table[order(Table$"Conditions"),]
 
     # Création du graph
-    Plot <- ggplot(data=Table, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions)) + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
+    # Seul les temps ou le status est à 1 sont affichés.
+    Plot <- ggplot(data=Table, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
+    Plot <- Plot + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
     Plot <- Plot + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
     Plot <- Plot + geom_point(size=4)+annotation_logticks(sides='tb')
     print(Plot)
