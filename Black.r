@@ -136,5 +136,34 @@ StackData <- function(Table1, Table2)
 # Associe 2 dataframe à la suite
 {
     Data <- merge(Table1, Table2, all=TRUE)
+    Data <- Data[order(Data$"Conditions"),]
     return(Data)
+}
+
+
+Modelization <- function(Data, Condition, Type="Lognormale")
+# Genration de la distribution theorique et les intervalles de confience
+# à partir de données expérimentales.
+
+# Calcul des limites pour le graphe
+lim <- range(Data)
+lim.high <- 10^(ceiling(log(lim[2],10)))
+lim.low <- 10^(floor(log(lim[1],10)))
+x <- 10^seq(log(lim.low,10),log(lim.high,10),0.05) # serie de points pour le modèle
+
+{
+    if (Type=="Weibull") {
+        fit <- fitdistr(Data,"weibull")
+        Shape <- fit$estimate[1]  # Beta
+        Scale <- fit$estimate[2]  # Charac time
+        y <- pweibull(x, Shape, Scale)
+
+    } else { # All other case are considered as Lognormale
+        fit <- fitdistr(Data,"lognormal")
+        Scale <- fit$estimate[1]  #   meanlog
+        Shape <- fit$estimate[2]  # sdlog
+        y <- plnorm(x, Scale, Shape)
+    }
+
+Model <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=Condition)
 }
