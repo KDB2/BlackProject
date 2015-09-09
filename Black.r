@@ -52,108 +52,114 @@ CreateDataFrame <- function(TTF, Status, Condition, Current, Temperature, Scale=
 # The probability is calculated according to lognormale or Weibull distribution.
 # Data are cleaned before probability calculation.
 
-# Data(TTF,Status,Probability,Condition,Current,Temperature)
+# Data(TTF,Status,Probability,Conditions,Current,Temperature)
 {
     CleanedData <- Clean(TTF,Status) # Clean & sort
     rk <- Ranking(CleanedData$TTF) # Fraction estimator calculation
     if (Scale=="Weibull") {
-      Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
+        Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
     } else {
-      Proba <- CalculProbability(rk,Scale="Lognormale") # Probability calculation Lognormale
+        Proba <- CalculProbability(rk,Scale="Lognormale") # Probability calculation Lognormale
     }
     # Generation of the final data frame
-    Data <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition, 'Current'=Current, 'Temperature'=Temperature)
-    return(Data)
+    DataTable <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition, 'Current'=Current, 'Temperature'=Temperature)
+    return(DataTable)
 }
 
 
-Plot <- function(Table, Scale="Lognormale")
-# Prend la table de données issue de ArrangeXxxxx et trace le graphe correspondant
-# Le paramètre facultatif Scale permet de tracer une échelle Weibull.
+CreateGraph <- function(DataTable, Scale="Lognormale")
+# Use the table prepared with CreateDataFrame and create the probability plot.
+# Default is Lonormale scale but Weibull is available as an option.
 {
-    # Calcul des limites pour le graphe
-    lim <- range(Table[,1])
+    # x scale limits calculation based on the data.
+    lim <- range(DataTable[,"TTF"]) # Min of the values is stored in [1] and max in  [2]
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
-    # Basé sur les limites, le calculs des etiquettes de l'axe x.
+    # Now that we have the limits, we create the graph labels for x axis.
     GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
 
-    # Calcul des etiquettes de l'axe y
-    # Etiquettes dynamique en fonction de la probabilité minimale
+    # Label for y axis
+    # Dynamique labels as a function of the minimal probability observed.
+    # Minimal proba is 0.01 %
 
-    # Cas Weibull
+    #  Weibull
     if (Scale == "Weibull") {
-        if (Table[1,3]<= Weibit(0.1/100)){ # Cas 1: inférieur à 0.1%
+        if (DataTable[1,"Probability"]<= Weibit(0.1/100)){ # Case 1: lower than 0.1%
             ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
         }
-        if (Table[1,3]<= Weibit(1/100) && Table[1,3]>= Weibit(0.1/100)){ # Cas 2: inférieur à 1% mais supérieur à 0.1%
+        if (DataTable[1,"Probability"]<= Weibit(1/100) && DataTable[1,"Probability"]>= Weibit(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
             ListeProba <- c(0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
         }
-        if (Table[1,3] >= Weibit(1/100)) { # Cas 3: Supérieur à 1%
+        if (DataTable[1,"Probability"] >= Weibit(1/100)) { # Case 3: higher than 1%
             ListeProba <- c(1,5,10,20,30,40,50,63,70,80,90,95,99)
         }
     ProbaNorm <- Weibit(ListeProba/100)
 
-    } else { # Cas distribution lognormale
-        if (Table[1,3]<= qnorm(0.1/100)){ # Cas 1: inférieur à 0.1%
+    } else { # Lognormale
+        if (DataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
             ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
         }
-        if (Table[1,3]<= qnorm(1/100) && Table[1,3]>= qnorm(0.1/100)){ # Cas 2: inférieur à 1% mais supérieur à 0.1%
+        if (DataTable[1,"Probability"]<= qnorm(1/100) && DataTable[1,"Probability"]>= qnorm(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
             ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
         }
-        if (Table[1,3] >= qnorm(1/100)) { # Cas 3: Supérieur à 1%
+        if (DataTable[1,"Probability"] >= qnorm(1/100)) { # Case 3: higher than 1%
             ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
         }
     ProbaNorm <- qnorm(ListeProba/100)
     }
 
-    # Création du sous ensemble avec les temps où le status est à 1.
-    # La table est triée pour que les conditions soient continues.
-    Table <- Table[Table$Status==1,]
-    Table <- Table[order(Table$"Conditions"),]
+    # We are only going to plot samples where status is '1' (experiment is finished).
+    # Table is sorted & conditions stay togeteher.
+    CleanTable <- DataTable[DataTable$Status==1,]
+    CleanTable <- CleanTable[order(CleanTable$"Conditions"),]
 
-    # Création du graph
-    # Seul les temps ou le status est à 1 sont affichés.
-    Plot <- ggplot(data=Table, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
-    Plot <- Plot + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
-    Plot <- Plot + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
-    Plot <- Plot + geom_point(size=4)+annotation_logticks(sides='tb')
-    print(Plot)
+    # Graph creation with CleanTable
+    Graph <- ggplot(data=CleanTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
+    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
+    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
+    Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
+    print(Graph)
 }
 
 
-StackData <- function(Table1, Table2)
-# Associe 2 dataframe à la suite
+StackData <- function(DataTable1, DataTable2)
+# Merge 2 DataTable
 {
-    Data <- merge(Table1, Table2, all=TRUE)
-    Data <- Data[order(Data$"Conditions"),]
-    return(Data)
+    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
+    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
+    return(NewDataTable)
 }
 
 
-Modelization <- function(Data, Condition, Type="Lognormale")
-# Genration de la distribution theorique et les intervalles de confience
-# à partir de données expérimentales.
-
-# Calcul des limites pour le graphe
-lim <- range(Data)
-lim.high <- 10^(ceiling(log(lim[2],10)))
-lim.low <- 10^(floor(log(lim[1],10)))
-x <- 10^seq(log(lim.low,10),log(lim.high,10),0.05) # serie de points pour le modèle
-
+Modelization <- function(DataTable, Type="Lognormale")
+# Using experimental data the theoretical distribution is genrated
+# 95% confidence intervals are also generated.
+# Default is Lonormale scale but Weibull is available as an option.
 {
-    if (Type=="Weibull") {
-        fit <- fitdistr(Data,"weibull")
-        Shape <- fit$estimate[1]  # Beta
-        Scale <- fit$estimate[2]  # Charac time
-        y <- pweibull(x, Shape, Scale)
+    # Condition, Current and Temperature stickers
+    ModelCondition <- DataTable[1,"Conditions"]
+    ModelCurrent <- DataTable[1,"Current"]
+    ModelTemperature <- DataTable[1,"Temperature"]
 
-    } else { # All other case are considered as Lognormale
-        fit <- fitdistr(Data,"lognormal")
-        Scale <- fit$estimate[1]  #   meanlog
-        Shape <- fit$estimate[2]  # sdlog
-        y <- plnorm(x, Scale, Shape)
+    # x axis limits are calculated
+    lim <- range(DataTable$TTF)
+    lim.high <- 10^(ceiling(log(lim[2],10)))
+    lim.low <- 10^(floor(log(lim[1],10)))
+    # Generation of a vector for the calculation of the model. 20pts/decades
+    x <- 10^seq(log(lim.low,10),log(lim.high,10),0.05)
+    # Model calculation with the experimental TTF
+    if (Type=="Weibull") { # Weibull
+          fit <- fitdistr(DataTable$TTF,"weibull")
+          Shape <- fit$estimate[1]  # Beta
+          Scale <- fit$estimate[2]  # Characteristic time (t_63%)
+          y <- pweibull(x, Shape, Scale)
+    } else { # Lognormale
+          fit <- fitdistr(DataTable$TTF,"lognormal")
+          Scale <- fit$estimate[1]  #   meanlog
+          Shape <- fit$estimate[2]  # sdlog
+          y <- plnorm(x, Scale, Shape)
     }
 
-Model <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=Condition)
+ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Current'=ModelCurrent,'Temperature'=ModelTemperature)
+return(ModelDataTable)
 }
