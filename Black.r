@@ -76,68 +76,13 @@ StackData <- function(DataTable1, DataTable2)
 }
 
 
-CreateGraph <- function(DataTable, Scale="Lognormale")
-# Use the table prepared with CreateDataFrame and create the probability plot.
-# Default is Lonormale scale but Weibull is available as an option.
-{
-    # x scale limits calculation based on the data.
-    lim <- range(DataTable[,"TTF"]) # Min of the values is stored in [1] and max in  [2]
-    lim.high <- 10^(ceiling(log(lim[2],10)))
-    lim.low <- 10^(floor(log(lim[1],10)))
-    # Now that we have the limits, we create the graph labels for x axis.
-    GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
-
-    # Label for y axis
-    # Dynamique labels as a function of the minimal probability observed.
-    # Minimal proba is 0.01 %
-
-    #  Weibull
-    if (Scale == "Weibull") {
-        if (DataTable[1,"Probability"]<= Weibit(0.1/100)){ # Case 1: lower than 0.1%
-            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
-        }
-        if (DataTable[1,"Probability"]<= Weibit(1/100) && DataTable[1,"Probability"]>= Weibit(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
-            ListeProba <- c(0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
-        }
-        if (DataTable[1,"Probability"] >= Weibit(1/100)) { # Case 3: higher than 1%
-            ListeProba <- c(1,5,10,20,30,40,50,63,70,80,90,95,99)
-        }
-    ProbaNorm <- Weibit(ListeProba/100)
-
-    } else { # Lognormale
-        if (DataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
-            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
-        }
-        if (DataTable[1,"Probability"]<= qnorm(1/100) && DataTable[1,"Probability"]>= qnorm(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
-            ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
-        }
-        if (DataTable[1,"Probability"] >= qnorm(1/100)) { # Case 3: higher than 1%
-            ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
-        }
-    ProbaNorm <- qnorm(ListeProba/100)
-    }
-
-    # We are only going to plot samples where status is '1' (experiment is finished).
-    # Table is sorted & conditions stay togeteher.
-    CleanTable <- DataTable[DataTable$Status==1,]
-    CleanTable <- CleanTable[order(CleanTable$"Conditions"),]
-
-    # Graph creation with CleanTable
-    Graph <- ggplot(data=CleanTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
-    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
-    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
-    Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
-    print(Graph)
-}
-
-
 Modelization <- function(DataTable, Type="Lognormale")
 # Using experimental data the theoretical distribution is genrated
 # 95% confidence intervals are also generated.
 # Default is Lonormale scale but Weibull is available as an option.
 {
     # Condition, Current and Temperature stickers
-    ModelCondition <- paste("Mod",DataTable[1,"Conditions"],sep="_")
+    ModelCondition <- DataTable[1,"Conditions"]
     ModelCurrent <- DataTable[1,"Current"]
     ModelTemperature <- DataTable[1,"Temperature"]
 
@@ -160,6 +105,79 @@ Modelization <- function(DataTable, Type="Lognormale")
           y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
     }
 
-ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Current'=ModelCurrent,'Temperature'=ModelTemperature)
-return(ModelDataTable)
+    ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Current'=ModelCurrent,'Temperature'=ModelTemperature)
+    return(ModelDataTable)
+}
+
+ErrorEstimation <- function(DataTable, ConfidenceValue)
+# Genration of confidence intervals
+{
+    mZP_Value <- qnorm(1 - ConfidenceValue / 2)
+    CDF <- pnorm(DataTable$Probability)
+    sef <- sqrt(CDF * (1 - CDF)/ length(CDF))
+    LowerLimit <- qnorm(abs(CDF - sef * mZP_Value))
+    HigherLimit <- qnorm(abs(CDF + sef * mZP_Value))
+
+    ConfidenceDataTable <- data.frame('TTF'=DataTable$TTF,'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=DataTable$Conditions)
+    return(ConfidenceDataTable)
+}
+
+
+CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale")
+# Use the table prepared with CreateDataFrame and create the probability plot.
+# Default is Lonormale scale but Weibull is available as an option.
+{
+    # x scale limits calculation based on the data.
+    lim <- range(ExpDataTable[,"TTF"]) # Min of the values is stored in [1] and max in  [2]
+    lim.high <- 10^(ceiling(log(lim[2],10)))
+    lim.low <- 10^(floor(log(lim[1],10)))
+    # Now that we have the limits, we create the graph labels for x axis.
+    GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
+
+    # Label for y axis
+    # Dynamique labels as a function of the minimal probability observed.
+    # Minimal proba is 0.01 %
+
+    #  Weibull
+    if (Scale == "Weibull") {
+        if (ExpDataTable[1,"Probability"]<= Weibit(0.1/100)){ # Case 1: lower than 0.1%
+            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
+        }
+        if (ExpDataTable[1,"Probability"]<= Weibit(1/100) && ExpDataTable[1,"Probability"]>= Weibit(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
+            ListeProba <- c(0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
+        }
+        if (ExpDataTable[1,"Probability"] >= Weibit(1/100)) { # Case 3: higher than 1%
+            ListeProba <- c(1,5,10,20,30,40,50,63,70,80,90,95,99)
+        }
+    ProbaNorm <- Weibit(ListeProba/100)
+
+    } else { # Lognormale
+        if (ExpDataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
+            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
+        }
+        if (ExpDataTable[1,"Probability"]<= qnorm(1/100) && ExpDataTable[1,"Probability"]>= qnorm(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
+            ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
+        }
+        if (ExpDataTable[1,"Probability"] >= qnorm(1/100)) { # Case 3: higher than 1%
+            ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
+        }
+    ProbaNorm <- qnorm(ListeProba/100)
+    }
+
+    # We are only going to plot samples where status is '1' (experiment is finished).
+    # Table is sorted & conditions stay togeteher.
+    CleanExpTable <- ExpDataTable[ExpDataTable$Status==1,]
+    CleanExpTable <- CleanExpTable[order(CleanExpTable$"Conditions"),]
+
+    # Graph creation with CleanTable
+    Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
+    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
+    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
+    Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
+    # Add the theoretical model
+    Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions))
+    # Add the confidence intervals
+    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed")
+    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed")
+    print(Graph)
 }
