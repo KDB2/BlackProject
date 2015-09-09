@@ -67,6 +67,15 @@ CreateDataFrame <- function(TTF, Status, Condition, Current, Temperature, Scale=
 }
 
 
+StackData <- function(DataTable1, DataTable2)
+# Merge 2 DataTable
+{
+    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
+    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
+    return(NewDataTable)
+}
+
+
 CreateGraph <- function(DataTable, Scale="Lognormale")
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
@@ -122,22 +131,13 @@ CreateGraph <- function(DataTable, Scale="Lognormale")
 }
 
 
-StackData <- function(DataTable1, DataTable2)
-# Merge 2 DataTable
-{
-    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
-    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
-    return(NewDataTable)
-}
-
-
 Modelization <- function(DataTable, Type="Lognormale")
 # Using experimental data the theoretical distribution is genrated
 # 95% confidence intervals are also generated.
 # Default is Lonormale scale but Weibull is available as an option.
 {
     # Condition, Current and Temperature stickers
-    ModelCondition <- DataTable[1,"Conditions"]
+    ModelCondition <- paste("Mod",DataTable[1,"Conditions"],sep="_")
     ModelCurrent <- DataTable[1,"Current"]
     ModelTemperature <- DataTable[1,"Temperature"]
 
@@ -145,19 +145,19 @@ Modelization <- function(DataTable, Type="Lognormale")
     lim <- range(DataTable$TTF)
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
-    # Generation of a vector for the calculation of the model. 20pts/decades
-    x <- 10^seq(log(lim.low,10),log(lim.high,10),0.05)
+    # Generation of a vector for the calculation of the model. 100pts/decades
+    x <- 10^seq(log(lim.low,10),log(lim.high,10),0.01)
     # Model calculation with the experimental TTF
     if (Type=="Weibull") { # Weibull
           fit <- fitdistr(DataTable$TTF,"weibull")
           Shape <- fit$estimate[1]  # Beta
           Scale <- fit$estimate[2]  # Characteristic time (t_63%)
-          y <- pweibull(x, Shape, Scale)
+          y <- CalculProbability(pweibull(x, Shape, Scale),"Weibull")
     } else { # Lognormale
           fit <- fitdistr(DataTable$TTF,"lognormal")
           Scale <- fit$estimate[1]  #   meanlog
           Shape <- fit$estimate[2]  # sdlog
-          y <- plnorm(x, Scale, Shape)
+          y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
     }
 
 ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Current'=ModelCurrent,'Temperature'=ModelTemperature)
