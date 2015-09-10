@@ -78,8 +78,7 @@ StackData <- function(DataTable1, DataTable2)
 
 
 Modelization <- function(DataTable, Type="Lognormale")
-# Using experimental data the theoretical distribution is genrated
-# 95% confidence intervals are also generated.
+# Using experimental data the theoretical distribution is generated
 # Default is Lonormale scale but Weibull is available as an option.
 {
     # Condition, Current and Temperature stickers
@@ -101,7 +100,7 @@ Modelization <- function(DataTable, Type="Lognormale")
           y <- CalculProbability(pweibull(x, Shape, Scale),"Weibull")
     } else { # Lognormale
           fit <- fitdistr(DataTable$TTF,"lognormal")
-          Scale <- fit$estimate[1]  #   meanlog
+          Scale <- fit$estimate[1]  # meanlog
           Shape <- fit$estimate[2]  # sdlog
           y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
     }
@@ -187,18 +186,20 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
 ReadData <- function(FileName, Scale="Lognormale")
 # Read the file exportfile and store it in a dataframe
 {
-    ResTable <- read.delim2(FileName)
+    ResTable <- read.delim(FileName)
     TTF <- ResTable["Lifetime.s."]
     Status <- ResTable["Failed"]
     Current <- ResTable["Istress"]
-    Temperature <- ResTable["Temp"]
-    Condition <- paste(file[1,5],"mA/",file[1,8],"C",sep="")
+    Temperature <- ResTable["Temp"])
+    Condition <- paste(ResTable[1,5],"mA/",ResTable[1,8],"C",sep="")
 
     if (Scale=="Weibull") {
         ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Weibull")
     } else {
         ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Lognormale")
     }
+    # Istress and Temp are dataframe and keep their names. We force the new names here.
+    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Current", "Temperature")
     return(ExpDataTable)
 }
 
