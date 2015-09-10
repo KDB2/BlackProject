@@ -182,3 +182,24 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed")
     print(Graph)
 }
+
+
+ReadData <- function(FileName, Scale="Lognormale")
+# Read the file exportfile and store it in a dataframe
+{
+    ResTable <- read.delim2(FileName)
+    TTF <- ResTable["Lifetime.s."]
+    Status <- ResTable["Failed"]
+    Current <- ResTable["Istress"]
+    Temperature <- ResTable["Temp"]
+    Condition <- paste(file[1,5],"mA/",file[1,8],"C",sep="")
+
+    if (Scale=="Weibull") {
+        ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Weibull")
+    } else {
+        ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Lognormale")
+    }
+    return(ExpDataTable)
+}
+
+#files = list.files(pattern="*exportfile.txt")
