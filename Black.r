@@ -109,16 +109,16 @@ Modelization <- function(DataTable, Type="Lognormale")
     return(ModelDataTable)
 }
 
-ErrorEstimation <- function(DataTable, ConfidenceValue)
+ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Genration of confidence intervals
 {
     mZP_Value <- qnorm((1 - ConfidenceValue) / 2)
-    CDF <- pnorm(DataTable$Probability)
-    sef <- sqrt(CDF * (1 - CDF)/16 )# length(CDF))
+    CDF <- pnorm(ModelDataTable$Probability)
+    sef <- sqrt(CDF * (1 - CDF)/length(ExpDataTable$TTF))
     LowerLimit <- qnorm(CDF - sef * mZP_Value)
     HigherLimit <- qnorm(CDF + sef * mZP_Value)
 
-    ConfidenceDataTable <- data.frame('TTF'=DataTable$TTF,'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=DataTable$Conditions)
+    ConfidenceDataTable <- data.frame('TTF'=ModelDataTable$TTF,'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ModelDataTable$Conditions)
     return(ConfidenceDataTable)
 }
 
