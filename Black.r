@@ -14,7 +14,13 @@ Ranking <- function(TTF)
 # rk(i)=(i-0.3)/(n+0.4)
 # TTF is a vector.
 {
-    rk <- (rank(TTF)-0.3)/(length(TTF)+0.4)
+    num <- seq(1,length(TTF)) 
+    rk <- (num-0.3)/(length(TTF)+0.4)
+    # rank doesn't provide a unique ID when 2 TTF have the same value.
+    # Num does the trick
+    #rk <- (rank(TTF)-0.3)/(length(TTF)+0.4)
+
+    return(rk)
 }
 
 
