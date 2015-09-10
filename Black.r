@@ -171,6 +171,12 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
 
     # Graph creation with CleanTable
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
+    # box around chart + background
+    Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    # Grid definitions
+    #Graph <- Graph + theme(panel.grid.major = element_line(colour, size, linetype, lineend, color))
+    #Graph <- Graph + theme(panel.grid.minor = element_line(linetype=1, colour="white", size = 0.25))
+    # Definition of scales
     Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
@@ -179,6 +185,21 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # Add the confidence intervals
     Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed")
     Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed")
+    # Font size & x/y titles...
+    Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
+    Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
+    Graph <- Graph + theme(axis.title.y = element_text(face="bold", size=16))
+    # legend size
+    Graph <- Graph + theme(legend.title = element_text(size=14, face="bold"))
+    Graph <- Graph + theme(legend.text = element_text(size = 12))
+    # Box around legend
+    Graph <- Graph + theme(legend.background = element_rect())
+    Graph <- Graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
+    # Label/ticks size
+    Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16))
+    Graph <- Graph + theme(axis.text.y = element_text(size=16))
+    Graph <- Graph + theme(axis.ticks.length = unit(-.25, "cm"), axis.ticks.margin=unit(0.4, "cm"))
+
     print(Graph)
 }
 
@@ -190,8 +211,8 @@ ReadData <- function(FileName, Scale="Lognormale")
     TTF <- ResTable["Lifetime.s."]
     Status <- ResTable["Failed"]
     Current <- ResTable["Istress"]
-    Temperature <- ResTable["Temp"])
-    Condition <- paste(ResTable[1,5],"mA/",ResTable[1,8],"C",sep="")
+    Temperature <- ResTable["Temp"]
+    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
 
     if (Scale=="Weibull") {
         ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Weibull")
