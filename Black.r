@@ -93,8 +93,8 @@ Modelization <- function(DataTable, Type="Lognormale")
     lim <- range(DataTable$TTF)
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
-    # Generation of a vector for the calculation of the model. 100pts/decades
-    x <- 10^seq(log(lim.low,10),log(lim.high,10),0.01)
+    # Generation of a vector for the calculation of the model. 200pts/decades
+    x <- 10^seq(log(lim.low,10),log(lim.high,10),0.005)
     # Model calculation with the experimental TTF
     if (Type=="Weibull") { # Weibull
           fit <- fitdistr(DataTable$TTF[DataTable$Status==1],"weibull")
@@ -220,7 +220,7 @@ ReadData <- function(FileName, Scale="Lognormale")
     Status <- ResTable["Failed"]
     Current <- ResTable["Istress"]
     Temperature <- ResTable["Temp"]
-    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
+    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
 
     if (Scale=="Weibull") {
         ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Weibull")
@@ -262,5 +262,5 @@ BlackAnalysis <- function(Scale="Lognormale")
           print("You need to create the export files first!")
     }
     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,Scale)
-    return(DataTable)
+    #return(DataTable)
 }
