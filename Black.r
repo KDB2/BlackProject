@@ -28,7 +28,7 @@ CalculProbability <- function(Probability, Scale="Lognormale")
 # Calculation of the Weibit is made for the Weibull case.
 {
   if (Scale=="Weibull") {
-      Proba <- ln(-ln(1-Probability)) # Weibull
+      Proba <- log(-log(1-Probability)) # Weibull
   } else {
       Proba <- qnorm(Probability) # Lognormal
   }
@@ -131,7 +131,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
 # Default is Lonormale scale but Weibull is available as an option.
 {
     # x scale limits calculation based on the data.
-    lim <- range(ExpDataTable[,"TTF"]) # Min of the values is stored in [1] and max in  [2]
+    lim <- range(ExpDataTable$TTF[ExpDataTable$Status==1]) # Min of the values is stored in [1] and max in  [2]
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
     # Now that we have the limits, we create the graph labels for x axis.
@@ -144,13 +144,13 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     #  Weibull
     if (Scale == "Weibull") {
         if (ExpDataTable[1,"Probability"]<= Weibit(0.1/100)){ # Case 1: lower than 0.1%
-            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
+            ListeProba <- c(0.01,0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
         }
         if (ExpDataTable[1,"Probability"]<= Weibit(1/100) && ExpDataTable[1,"Probability"]>= Weibit(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
-            ListeProba <- c(0.1,1,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
+            ListeProba <- c(0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
         }
         if (ExpDataTable[1,"Probability"] >= Weibit(1/100)) { # Case 3: higher than 1%
-            ListeProba <- c(1,5,10,20,30,40,50,63,70,80,90,95,99)
+            ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
         }
     ProbaNorm <- Weibit(ListeProba/100)
 
@@ -184,6 +184,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
     # Controled symbol list -- Max is 20 conditions on the chart.
     Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
+    Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
     # Add the theoretical model
     Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
@@ -232,22 +233,23 @@ ReadData <- function(FileName, Scale="Lognormale")
 }
 
 BlackAnalysis <- function(Scale="Lognormale")
+# Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
 {
     ListFiles = list.files(pattern="*exportfile.txt")
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # Import the first file to create the 3 dataframes
-          DataTable <- ReadData(ListFiles[1])
-          ModelDataTable <- Modelization(DataTable)
+          DataTable <- ReadData(ListFiles[1],Scale)
+          ModelDataTable <- Modelization(DataTable,Scale)
           ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
 
           # Let's now check if other files are available
           if (length(ListFiles) > 1){
                 # loop to open all the files and stack them in the dataframe
                 for (i in 2:length(ListFiles)){
-                    NewDataTable <- ReadData(ListFiles[i])
-                    NewModelDataTable <- Modelization(NewDataTable)
+                    NewDataTable <- ReadData(ListFiles[i],Scale)
+                    NewModelDataTable <- Modelization(NewDataTable,Scale)
                     NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
 
                     # Merging the tables
@@ -259,5 +261,6 @@ BlackAnalysis <- function(Scale="Lognormale")
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,Scale)
+    return(DataTable)
 }
