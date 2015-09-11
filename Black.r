@@ -176,17 +176,19 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # box around chart + background
     Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
     # Grid definitions
-    Graph <- Graph + theme(panel.grid.major = element_line(colour="gray", size=0.25, linetype=1))
+    Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
     Graph <- Graph + theme(panel.grid.minor = element_line(linetype=0, colour="white", size = 0.25))
     # Definition of scales
     Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
+    # Controled symbol list
+    Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
     # Add the theoretical model
-    Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions))
+    Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
     # Add the confidence intervals
-    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed")
-    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed")
+    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
+    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     # Font size & x/y titles...
     Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
     Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
