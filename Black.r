@@ -2,6 +2,7 @@
 # using a serie of electromigration experiments.
 # September 2015
 # Emmanuel Chery
+# Version 0.8
 
 # Required Packages
 library('ggplot2')
@@ -96,12 +97,12 @@ Modelization <- function(DataTable, Type="Lognormale")
     x <- 10^seq(log(lim.low,10),log(lim.high,10),0.01)
     # Model calculation with the experimental TTF
     if (Type=="Weibull") { # Weibull
-          fit <- fitdistr(DataTable$TTF,"weibull")
+          fit <- fitdistr(DataTable$TTF[DataTable$Status==1],"weibull")
           Shape <- fit$estimate[1]  # Beta
           Scale <- fit$estimate[2]  # Characteristic time (t_63%)
           y <- CalculProbability(pweibull(x, Shape, Scale),"Weibull")
     } else { # Lognormale
-          fit <- fitdistr(DataTable$TTF,"lognormal")
+          fit <- fitdistr(DataTable$TTF[DataTable$Status==1],"lognormal")
           Scale <- fit$estimate[1]  # meanlog
           Shape <- fit$estimate[2]  # sdlog
           y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
@@ -181,7 +182,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # Definition of scales
     Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
-    # Controled symbol list
+    # Controled symbol list -- Max is 20 conditions on the chart.
     Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
     # Add the theoretical model
@@ -230,4 +231,33 @@ ReadData <- function(FileName, Scale="Lognormale")
     return(ExpDataTable)
 }
 
-#files = list.files(pattern="*exportfile.txt")
+BlackAnalysis <- function(Scale="Lognormale")
+# Open all the exportfiles from the workfolder
+{
+    ListFiles = list.files(pattern="*exportfile.txt")
+    # case 1, there are one or several files available
+    if (length(ListFiles) != 0){
+          # Import the first file to create the 3 dataframes
+          DataTable <- ReadData(ListFiles[1])
+          ModelDataTable <- Modelization(DataTable)
+          ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
+
+          # Let's now check if other files are available
+          if (length(ListFiles) > 1){
+                # loop to open all the files and stack them in the dataframe
+                for (i in 2:length(ListFiles)){
+                    NewDataTable <- ReadData(ListFiles[i])
+                    NewModelDataTable <- Modelization(NewDataTable)
+                    NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
+
+                    # Merging the tables
+                    DataTable <- StackData(DataTable,NewDataTable)
+                    ModelDataTable <- StackData(ModelDataTable,NewModelDataTable)
+                    ErrorDataTable <- StackData(ErrorDataTable,NewErrorDataTable)
+                }
+          }
+    } else { # case 2, there are no files available
+          print("You need to create the export files first!")
+    }
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable)
+}
