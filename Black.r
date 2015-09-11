@@ -7,6 +7,8 @@
 library('ggplot2')
 library('MASS')
 library('scales')
+library('grid')
+
 
 
 Ranking <- function(TTF)
@@ -174,8 +176,8 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # box around chart + background
     Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
     # Grid definitions
-    #Graph <- Graph + theme(panel.grid.major = element_line(colour, size, linetype, lineend, color))
-    #Graph <- Graph + theme(panel.grid.minor = element_line(linetype=1, colour="white", size = 0.25))
+    Graph <- Graph + theme(panel.grid.major = element_line(colour="gray", size=0.25, linetype=1))
+    Graph <- Graph + theme(panel.grid.minor = element_line(linetype=0, colour="white", size = 0.25))
     # Definition of scales
     Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
@@ -195,6 +197,8 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # Box around legend
     Graph <- Graph + theme(legend.background = element_rect())
     Graph <- Graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
+    #Box around the conditions in legend
+    Graph <- Graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
     # Label/ticks size
     Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16))
     Graph <- Graph + theme(axis.text.y = element_text(size=16))
