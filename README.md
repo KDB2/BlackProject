@@ -1,4 +1,4 @@
 # BlackProject
-Work in Progress 
+Work in Progress -- Laboratory for amsReliability package
 
 Language: R
