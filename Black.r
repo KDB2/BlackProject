@@ -1,8 +1,9 @@
-# Script collection allowing the extraction of Black's parameters
+# Script collection for the process reliability team of ams.
+# First part is allowing the extraction of Black's parameters
 # using a serie of electromigration experiments.
 # September 2015
 # Emmanuel Chery
-# Version 0.8
+# Version 0.8 RC
 
 # Required Packages
 library('ggplot2')
