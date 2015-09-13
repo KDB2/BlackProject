@@ -116,8 +116,9 @@ Modelization <- function(DataTable, Type="Lognormale")
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Genration of confidence intervals
 {
-    mZP_Value <- qnorm((1 - ConfidenceValue) / 2)
-    CDF <- pnorm(ModelDataTable$Probability)
+    #mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Cas normal. Valide si sample size > 30.
+    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(length(ExpDataTable$TTF) -1) )
+    CDF <- pnorm(ModelDataTable$Probability) # TO BE CHECKED
     sef <- sqrt(CDF * (1 - CDF)/length(ExpDataTable$TTF))
     LowerLimit <- qnorm(CDF - sef * mZP_Value)
     HigherLimit <- qnorm(CDF + sef * mZP_Value)
@@ -237,6 +238,7 @@ BlackAnalysis <- function(Scale="Lognormale")
 # Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
 {
+    #rm(list=ls())
     ListFiles = list.files(pattern="*exportfile.txt")
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
