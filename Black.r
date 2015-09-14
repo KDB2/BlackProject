@@ -37,60 +37,66 @@ CalculProbability <- function(Probability, Scale="Lognormale")
 }
 
 
-# Clean <- function(TTF,Status)
-# # TTF and status are vectors and have the same length.
-# # Cleaning of the data. Only TTF with a status 1 or 0 are kept.
-# # Finally TTF are sorted from the smallest to the largest.
-# {
-#     TTF <- TTF[Status==0 | Status==1]
-#     Status <- Status[Status==0 | Status==1]
-#     Res <- data.frame('TTF'=TTF,'Status'=Status)
-#     Res <- Res[order(Res$"TTF"),] # Sort TTF
-#     return(Res)
-# }
-
-
 Clean <- function(DataTable)
 # Take a datatable provided by ReadData and clean it.
-# Cleaning of the data. Only TTF with a status 1 or 0 are kept.
+# Cleaning of the data. Only lines with a status 1 or 0 are kept.
 # Finally TTF are sorted from the smallest to the largest.
+# Qualitau column name is 'Failed'
 {
-    TTF <- TTF[Status==0 | Status==1]
-    Status <- Status[Status==0 | Status==1]
-    Res <- data.frame('TTF'=TTF,'Status'=Status)
-    Res <- Res[order(Res$"TTF"),] # Sort TTF
-    return(Res)
+    CleanedTable <- DataTable[DataTable$Status==1 | DataTable$Status==0,]
+    CleanedTable <- CleanedTable[order(CleanedTable$"TTF"),] # Sort TTF
+    return(CleanedTable)
 }
 
 
-CreateDataFrame <- function(TTF, Status, Condition, Current, Temperature, Scale="Lognormale")
+CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormale")
 # Creation of the dataframe assembling the TTF, the status of the samples,
 # the probability, the condition (stickers for charts),
-# the current and the temperature used durng the stress.
+# the stress condition and the temperature used durng the stress.
 # The probability is calculated according to lognormale or Weibull distribution.
-# Data are cleaned before probability calculation.
+# Data are given clean.
 
-# Data(TTF,Status,Probability,Conditions,Current,Temperature)
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
 {
-    CleanedData <- Clean(TTF,Status) # Clean & sort
-    rk <- Ranking(CleanedData$TTF) # Fraction estimator calculation
+    rk <- Ranking(TTF) # Fraction estimator calculation
     if (Scale=="Weibull") {
         Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
     } else {
         Proba <- CalculProbability(rk,Scale="Lognormale") # Probability calculation Lognormale
     }
     # Generation of the final data frame
-    DataTable <- data.frame('TTF'=CleanedData$TTF,'Status'=CleanedData$Status,'Probability'=Proba,'Conditions'=Condition, 'Current'=Current, 'Temperature'=Temperature)
+    DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature)
     return(DataTable)
 }
 
 
-StackData <- function(DataTable1, DataTable2)
-# Merge 2 DataTable
+ReadDataAce <- function(FileName, Scale="Lognormale")
+# Read the file exportfile and store it in a dataframe
+# Data are cleaned to remove bad units
 {
-    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
-    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
-    return(NewDataTable)
+    # Read the file and store it
+    ResTable <- read.delim(FileName)
+    # Creation of the new dataframe
+    TTF <- ResTable["Lifetime.s."]
+    Status <- ResTable["Failed"]
+    Stress <- ResTable["Istress"]
+    Temperature <- ResTable["Temp"]
+    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
+    ResTable <- data.frame(TTF,Status,Condition,Stress,Temperature)
+    # Force the column names
+    names(ResTable) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
+    # Cleaning
+    ResTable <- Clean(ResTable)
+
+    # Probability is missing. Let's add it.
+    if (Scale=="Weibull") {
+        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Weibull")
+    } else {
+        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Lognormale")
+    }
+    # We force the new names here as a security check.
+    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature")
+    return(ExpDataTable)
 }
 
 
@@ -98,9 +104,9 @@ Modelization <- function(DataTable, Type="Lognormale")
 # Using experimental data the theoretical distribution is generated
 # Default is Lonormale scale but Weibull is available as an option.
 {
-    # Condition, Current and Temperature stickers
+    # Condition, Stress and Temperature stickers
     ModelCondition <- DataTable[1,"Conditions"]
-    ModelCurrent <- DataTable[1,"Current"]
+    ModelStress <- DataTable[1,"Stress"]
     ModelTemperature <- DataTable[1,"Temperature"]
 
     # x axis limits are calculated
@@ -122,9 +128,10 @@ Modelization <- function(DataTable, Type="Lognormale")
           y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
     }
 
-    ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Current'=ModelCurrent,'Temperature'=ModelTemperature)
+    ModelDataTable <- data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Stress'=ModelStress,'Temperature'=ModelTemperature)
     return(ModelDataTable)
 }
+
 
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Genration of confidence intervals
@@ -141,7 +148,16 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 }
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale", ErrorBand=TRUE)
+StackData <- function(DataTable1, DataTable2)
+# Merge 2 DataTable
+{
+    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
+    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
+    return(NewDataTable)
+}
+
+
+CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale", ErrorBands=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
 {
@@ -204,7 +220,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # Add the theoretical model
     Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
     # Add the confidence intervals
-    if (ErrorBand==TRUE) {
+    if (ErrorBands==TRUE) {
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     }
@@ -229,26 +245,6 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
 }
 
 
-ReadData <- function(FileName, Scale="Lognormale")
-# Read the file exportfile and store it in a dataframe
-{
-    ResTable <- read.delim(FileName)
-    TTF <- ResTable["Lifetime.s."]
-    Status <- ResTable["Failed"]
-    Current <- ResTable["Istress"]
-    Temperature <- ResTable["Temp"]
-    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
-
-    if (Scale=="Weibull") {
-        ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Weibull")
-    } else {
-        ExpDataTable <- CreateDataFrame(TTF, Status, Condition, Current, Temperature, Scale="Lognormale")
-    }
-    # Istress and Temp are dataframe and keep their names. We force the new names here.
-    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Current", "Temperature")
-    return(ExpDataTable)
-}
-
 BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
 # Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
@@ -258,7 +254,7 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # Import the first file to create the 3 dataframes
-          DataTable <- ReadData(ListFiles[1],Scale)
+          DataTable <- ReadDataAce(ListFiles[1],Scale)
           ModelDataTable <- Modelization(DataTable,Scale)
           ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
 
@@ -266,7 +262,7 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
           if (length(ListFiles) > 1){
                 # loop to open all the files and stack them in the dataframe
                 for (i in 2:length(ListFiles)){
-                    NewDataTable <- ReadData(ListFiles[i],Scale)
+                    NewDataTable <- ReadDataAce(ListFiles[i],Scale)
                     NewModelDataTable <- Modelization(NewDataTable,Scale)
                     NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
 
