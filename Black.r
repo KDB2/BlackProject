@@ -117,9 +117,9 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Genration of confidence intervals
 {
     #mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Cas normal. Valide si sample size > 30.
-    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(length(ExpDataTable$TTF) -1) )
+    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(length(ExpDataTable$TTF) -1) ) # t-test statistic for low sample size
     CDF <- pnorm(ModelDataTable$Probability) # TO BE CHECKED
-    sef <- sqrt(CDF * (1 - CDF)/length(ExpDataTable$TTF))
+    sef <- sqrt(CDF * (1 - CDF)/length(ExpDataTable$TTF)) # TO BE CHECKED
     LowerLimit <- qnorm(CDF - sef * mZP_Value)
     HigherLimit <- qnorm(CDF + sef * mZP_Value)
 
@@ -128,7 +128,7 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 }
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale")
+CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale", ErrorBand=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
 {
@@ -191,8 +191,10 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     # Add the theoretical model
     Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
     # Add the confidence intervals
-    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
-    Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
+    if (ErrorBand==TRUE) {
+        Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
+        Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
+    }
     # Font size & x/y titles...
     Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
     Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
@@ -234,7 +236,7 @@ ReadData <- function(FileName, Scale="Lognormale")
     return(ExpDataTable)
 }
 
-BlackAnalysis <- function(Scale="Lognormale")
+BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
 # Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
 {
@@ -264,6 +266,6 @@ BlackAnalysis <- function(Scale="Lognormale")
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,Scale)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,Scale,ErrorBand)
     #return(DataTable)
 }
