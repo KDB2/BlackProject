@@ -37,8 +37,21 @@ CalculProbability <- function(Probability, Scale="Lognormale")
 }
 
 
-Clean <- function(TTF,Status)
-# TTF and status are vectors and have the same length.
+# Clean <- function(TTF,Status)
+# # TTF and status are vectors and have the same length.
+# # Cleaning of the data. Only TTF with a status 1 or 0 are kept.
+# # Finally TTF are sorted from the smallest to the largest.
+# {
+#     TTF <- TTF[Status==0 | Status==1]
+#     Status <- Status[Status==0 | Status==1]
+#     Res <- data.frame('TTF'=TTF,'Status'=Status)
+#     Res <- Res[order(Res$"TTF"),] # Sort TTF
+#     return(Res)
+# }
+
+
+Clean <- function(DataTable)
+# Take a datatable provided by ReadData and clean it.
 # Cleaning of the data. Only TTF with a status 1 or 0 are kept.
 # Finally TTF are sorted from the smallest to the largest.
 {
