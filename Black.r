@@ -117,6 +117,7 @@ Modelization <- function(DataTable, Type="Lognormale")
     x <- 10^seq(log(lim.low,10),log(lim.high,10),0.005)
     # Model calculation with the experimental TTF
     if (Type=="Weibull") { # Weibull
+          #x <- 10^seq(log(lim.low,10),log(lim.high,10),0.00005)
           fit <- fitdistr(DataTable$TTF[DataTable$Status==1],"weibull")
           Shape <- fit$estimate[1]  # Beta
           Scale <- fit$estimate[2]  # Characteristic time (t_63%)
@@ -136,10 +137,14 @@ Modelization <- function(DataTable, Type="Lognormale")
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Genration of confidence intervals
 {
-    #mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Cas normal. Valide si sample size > 30.
-    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(length(ExpDataTable$TTF) -1) ) # t-test statistic for low sample size
+    NbData <- length(ExpDataTable$TTF)
+    if (NbData > 30) {
+        mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Cas normal. Valide si sample size > 30.
+    } else {
+        mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
+    }
     CDF <- pnorm(ModelDataTable$Probability) # TO BE CHECKED
-    sef <- sqrt(CDF * (1 - CDF)/length(ExpDataTable$TTF)) # TO BE CHECKED
+    sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
     LowerLimit <- qnorm(CDF - sef * mZP_Value)
     HigherLimit <- qnorm(CDF + sef * mZP_Value)
 
@@ -174,16 +179,16 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
 
     #  Weibull
     if (Scale == "Weibull") {
-        if (ExpDataTable[1,"Probability"]<= Weibit(0.1/100)){ # Case 1: lower than 0.1%
+        if (ExpDataTable[1,"Probability"]<= CalculProbability(0.1/100,Scale)){ # Case 1: lower than 0.1%
             ListeProba <- c(0.01,0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
         }
-        if (ExpDataTable[1,"Probability"]<= Weibit(1/100) && ExpDataTable[1,"Probability"]>= Weibit(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
+        if (ExpDataTable[1,"Probability"]<= CalculProbability(1/100,Scale) && ExpDataTable[1,"Probability"]>= CalculProbability(0.1/100,Scale)){ # Case 2: lower than 1% but higher than 0.1%
             ListeProba <- c(0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
         }
-        if (ExpDataTable[1,"Probability"] >= Weibit(1/100)) { # Case 3: higher than 1%
+        if (ExpDataTable[1,"Probability"] >= CalculProbability(1/100,Scale)) { # Case 3: higher than 1%
             ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
         }
-    ProbaNorm <- Weibit(ListeProba/100)
+    ProbaNorm <- CalculProbability(ListeProba/100,Scale)
 
     } else { # Lognormale
         if (ExpDataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
