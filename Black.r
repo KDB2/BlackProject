@@ -38,7 +38,7 @@ CalculProbability <- function(Probability, Scale="Lognormale")
 
 
 Clean <- function(DataTable)
-# Take a datatable provided by ReadData and clean it.
+# Take a datatable provided by CreateDataFrame and clean it.
 # Cleaning of the data. Only lines with a status 1 or 0 are kept.
 # Finally TTF are sorted from the smallest to the largest.
 # Qualitau column name is 'Failed'
@@ -139,7 +139,7 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 {
     NbData <- length(ExpDataTable$TTF)
     if (NbData > 30) {
-        mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Cas normal. Valide si sample size > 30.
+        mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
     } else {
         mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
     }
@@ -162,7 +162,7 @@ StackData <- function(DataTable1, DataTable2)
 }
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale="Lognormale", ErrorBands=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title="", Scale="Lognormale", ErrorBands=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
 {
@@ -245,8 +245,18 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Scale
     Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16))
     Graph <- Graph + theme(axis.text.y = element_text(size=16))
     Graph <- Graph + theme(axis.ticks.length = unit(-.25, "cm"), axis.ticks.margin=unit(0.4, "cm"))
+    # Add a title
+    Graph <- Graph + ggtitle(Title)
+    Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
 
     print(Graph)
+
+    # Save as png
+    if (Title != ""){
+        ggsave(paste(Title,"png",sep="."))
+    } else {
+        ggsave("Chart.png")
+    }
 }
 
 
@@ -255,7 +265,8 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
 # Open all the exportfiles from the workfolder
 {
     #rm(list=ls())
-    ListFiles = list.files(pattern="*exportfile.txt")
+    ListFiles <- list.files(pattern="*exportfile.txt")
+    StructureName <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # Import the first file to create the 3 dataframes
@@ -280,6 +291,54 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE)
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,Scale,ErrorBand)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,StructureName,Scale,ErrorBand)
     #return(DataTable)
+}
+
+
+CreateExportFiles <- function()
+# Main function called to create the exportfiles.
+# Open all deg and TCR files from the workfolder
+{
+    # Constant parameters
+    ListDevice <- c("AM-001A6","M2-001A6")
+    ListWidth <- c(4.4,4)
+
+    # File to be read
+    ListDegFiles <- list.files(pattern="*deg.txt")
+    ListTCRFiles <- list.files(pattern="*TCR.txt")
+
+    # File number verification
+    if (length(ListDegFiles) == 0 || length(ListTCRFiles) == 0 || length(ListDegFiles) != length(ListTCRFiles))  {
+        print("Number of files is wrong. Please check!")
+    } else {
+        # We proceed
+        # FAIRE BOUCLE DE VERIFICATION ICI POUR LE NOM DES FICHIERS
+        for (i in 1:length(ListDegFiles)){
+            DegFile <- read.delim(ListDegFiles[i],sep="")
+            names(DegFile) <- c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type")
+            TCRFile <- read.delim(ListTCRFiles[i],sep="",skip=1)
+            names(TCRFile) <- c("Device","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
+
+            # Merge the files with new columns Split, Istress...
+            Split<-c(1,2)
+            # Istress extracted from filename and mA is removed
+            Istress <- strsplit(ListDegFiles[i],split="_")[[1]][3]
+            Istress <- as.numeric(substr(Istress, 1, nchar(Istress)-2))
+            # Temp extracted from filename and C is removed
+            Temp <- strsplit(ListDegFiles[i],split="_")[[1]][4]
+            Temp <- as.numeric(substr(Temp, 1, nchar(Temp)-1))
+
+            L <- c(200,400)
+            DeviceID <- strsplit(ListDegFiles[i],split="_")[[1]][2]
+            W <- ListWidth[ListDevice==DeviceID]
+
+            NewFile <- data.frame(DegFile[,1:3],Split,Istress,L,W,Temp,DeviceID,TCRFile[,2:14])
+            names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
+
+            # Saving in a file
+            FileName <- paste(substr(ListDegFiles[i], 1, nchar(ListDegFiles[i])-7),"exportfile.txt",sep="")
+            write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+        }
+    }
 }
