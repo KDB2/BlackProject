@@ -300,10 +300,8 @@ CreateExportFiles <- function()
 # Main function called to create the exportfiles.
 # Open all deg and TCR files from the workfolder
 {
-    # Constant parameters
-    ListDevice <- c("AM-001A6","M2-001A6")
-    ListWidth <- c(4.4,4)
-
+    # Device and Width parameters
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/0.18_um_Technology/0.18 FabB/BEOL/Elmig/ListDeviceName.txt")
     # File to be read
     ListDegFiles <- list.files(pattern="*deg.txt")
     ListTCRFiles <- list.files(pattern="*TCR.txt")
@@ -333,7 +331,7 @@ CreateExportFiles <- function()
 
                 L <- c(200,400)
                 DeviceID <- strsplit(ListDegFiles[i],split="_")[[1]][2]
-                W <- ListWidth[ListDevice==DeviceID]
+                W <- ListDevice$Width[ListDevice$Device==DeviceID]
 
                 NewFile <- data.frame(DegFile[,1:3],Split,Istress,L,W,Temp,DeviceID,TCRFile[,2:14])
                 names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
