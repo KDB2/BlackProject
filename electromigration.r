@@ -263,40 +263,40 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
-BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
-# Main function calling the other. The one to use to open all the files.
-# Open all the exportfiles from the workfolder
-{
-    #rm(list=ls())
-    ListFiles <- list.files(pattern="*exportfile.txt")
-    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
-    # case 1, there are one or several files available
-    if (length(ListFiles) != 0){
-          # Import the first file to create the 3 dataframes
-          DataTable <- ReadDataAce(ListFiles[1],Scale)
-          ModelDataTable <- Modelization(DataTable,Scale)
-          ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
-
-          # Let's now check if other files are available
-          if (length(ListFiles) > 1){
-                # loop to open all the files and stack them in the dataframe
-                for (i in 2:length(ListFiles)){
-                    NewDataTable <- ReadDataAce(ListFiles[i],Scale)
-                    NewModelDataTable <- Modelization(NewDataTable,Scale)
-                    NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
-
-                    # Merging the tables
-                    DataTable <- StackData(DataTable,NewDataTable)
-                    ModelDataTable <- StackData(ModelDataTable,NewModelDataTable)
-                    ErrorDataTable <- StackData(ErrorDataTable,NewErrorDataTable)
-                }
-          }
-    } else { # case 2, there are no files available
-          print("You need to create the export files first!")
-    }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale,ErrorBand,Save)
-    return(DataTable)
-}
+# BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
+# # Main function calling the other. The one to use to open all the files.
+# # Open all the exportfiles from the workfolder
+# {
+#     #rm(list=ls())
+#     ListFiles <- list.files(pattern="*exportfile.txt")
+#     DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
+#     # case 1, there are one or several files available
+#     if (length(ListFiles) != 0){
+#           # Import the first file to create the 3 dataframes
+#           DataTable <- ReadDataAce(ListFiles[1],Scale)
+#           ModelDataTable <- Modelization(DataTable,Scale)
+#           ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
+#
+#           # Let's now check if other files are available
+#           if (length(ListFiles) > 1){
+#                 # loop to open all the files and stack them in the dataframe
+#                 for (i in 2:length(ListFiles)){
+#                     NewDataTable <- ReadDataAce(ListFiles[i],Scale)
+#                     NewModelDataTable <- Modelization(NewDataTable,Scale)
+#                     NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
+#
+#                     # Merging the tables
+#                     DataTable <- StackData(DataTable,NewDataTable)
+#                     ModelDataTable <- StackData(ModelDataTable,NewModelDataTable)
+#                     ErrorDataTable <- StackData(ErrorDataTable,NewErrorDataTable)
+#                 }
+#           }
+#     } else { # case 2, there are no files available
+#           print("You need to create the export files first!")
+#     }
+#     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale,ErrorBand,Save)
+#     return(DataTable)
+# }
 
 
 BlackModelization <- function(DataTable, DeviceID)
@@ -368,4 +368,41 @@ BlackModelization <- function(DataTable, DeviceID)
     }
 
     return(ModelDataTable)
+}
+
+
+BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
+# Main function calling the other. The one to use to open all the files.
+# Open all the exportfiles from the workfolder
+{
+    #rm(list=ls())
+    ListFiles <- list.files(pattern="*exportfile.txt")
+    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
+    # case 1, there are one or several files available
+    if (length(ListFiles) != 0){
+          # Import the first file to create the 3 dataframes
+          DataTable <- ReadDataAce(ListFiles[1],Scale)
+          #ModelDataTable <- Modelization(DataTable,Scale)
+          #ErrorDataTable <- ErrorEstimation(DataTable,ModelDataTable)
+
+          # Let's now check if other files are available
+          if (length(ListFiles) > 1){
+                # loop to open all the files and stack them in the dataframe
+                for (i in 2:length(ListFiles)){
+                    NewDataTable <- ReadDataAce(ListFiles[i],Scale)
+                    #NewModelDataTable <- Modelization(NewDataTable,Scale)
+                    #NewErrorDataTable <- ErrorEstimation(NewDataTable,NewModelDataTable)
+
+                    # Merging the tables
+                    DataTable <- StackData(DataTable,NewDataTable)
+                    #ModelDataTable <- StackData(ModelDataTable,NewModelDataTable)
+                    #ErrorDataTable <- StackData(ErrorDataTable,NewErrorDataTable)
+                }
+          }
+          ModelDataTable <- BlackModelization(DataTable, DeviceID)
+    } else { # case 2, there are no files available
+          print("You need to create the export files first!")
+    }
+    CreateGraph(DataTable,ModelDataTable,ModelDataTable,DeviceID,Scale,ErrorBand,Save)
+    #return(DataTable)
 }
