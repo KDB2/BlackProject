@@ -1,9 +1,9 @@
 # Script collection for ams AG process reliability team.
-# Allow to display and process electromigration data. 
+# Allow to display and process electromigration data.
 # Extraction of Black's parameters is performed.
 # September 2015
 # Emmanuel Chery
-# Version 0.2 
+# Version 0.2
 
 
 # Required Packages
@@ -269,7 +269,7 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
 {
     #rm(list=ls())
     ListFiles <- list.files(pattern="*exportfile.txt")
-    StructureName <- strsplit(ListFiles[1],split="_")[[1]][2]
+    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # Import the first file to create the 3 dataframes
@@ -294,6 +294,78 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,StructureName,Scale,ErrorBand,Save)
-    #return(DataTable)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale,ErrorBand,Save)
+    return(DataTable)
+}
+
+
+BlackModelization <- function(DataTable, DeviceID)
+# Modelize the data using Black equation
+# Extract the parameters: A, n and Ea
+# as well as the lognormal slope
+# TTF = A j^(-n) exp(Ea/kT + Scale * Proba)
+# Proba in standard deviations
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
+{
+    # Read the list of device to retrieve the section parameters.
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/0.18_um_Technology/0.18 FabB/BEOL/Elmig/ListDeviceName.txt")
+    W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+    H <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+    S <- W*H*1E-12 # m^2
+
+    # Physical constants
+    k <- 1.38E-23 # Boltzmann
+    e <- 1.6E-19 # electron charge
+
+
+    # Black model
+    Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
+    # Parameters Extraction
+    A <- coef(Model)[1]
+    n <- coef(Model)[2]
+    Ea <-coef(Model)[3]
+    Scale <- coef(Model)[4]
+
+    # Using the parameters and the conditions, theoretical distributions are created
+    # list of conditions
+    ListConditions <- levels(DataTable$Conditions)
+
+    # Initialisation with first condition
+    #####################################
+
+    # Conditions
+    Condition <- ListConditions[1]
+    I <- DataTable$Stress[DataTable$Conditions==ListConditions[1]][1]
+    Temp <- DataTable$Temperature[DataTable$Conditions==ListConditions[1]][1]  # °C
+
+    # y axis points are calculated. (limits 1% -- 99%)
+    Proba <- seq(qnorm(0.01),qnorm(0.99),0.05)
+    # TTF calculation
+    TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
+
+    # Dataframe creation
+    ModelDataTable <- data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp)
+
+
+    # Loop to create the DataFrame
+    if ( length(ListConditions) > 1 ){
+        for (i in 2:length(ListConditions)){
+
+            # Conditions
+            Condition <- ListConditions[i]
+            I <- DataTable$Stress[DataTable$Conditions==ListConditions[i]][1]
+            Temp <- DataTable$Temperature[DataTable$Conditions==ListConditions[i]][1]  # °C
+
+            # TTF calculation
+            TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
+
+            # Dataframe creation
+            NewData <- data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp)
+
+            #Stack in 1 global table
+            ModelDataTable <- StackData(ModelDataTable,NewData)
+        }
+    }
+
+    return(ModelDataTable)
 }
