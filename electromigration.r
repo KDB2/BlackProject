@@ -318,13 +318,15 @@ BlackModelization <- function(DataTable, DeviceID)
     e <- 1.6E-19 # electron charge
 
 
-    # Black model
-    Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
+    # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
+    Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
+    #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
     # Parameters Extraction
     A <- coef(Model)[1]
     n <- coef(Model)[2]
     Ea <-coef(Model)[3]
     Scale <- coef(Model)[4]
+    GoF <- sum(resid(Model)^2)
 
     # Using the parameters and the conditions, theoretical distributions are created
     # list of conditions
@@ -366,7 +368,8 @@ BlackModelization <- function(DataTable, DeviceID)
             ModelDataTable <- StackData(ModelDataTable,NewData)
         }
     }
-
+    write.table(data.frame('A'=A,'n'=n,'Ea'=Ea,'Scale'=Scale,"GoF"=GoF),"fit.txt",quote=FALSE,sep="\t")
+    print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," GoF=",GoF,sep=""))
     return(ModelDataTable)
 }
 
