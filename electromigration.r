@@ -101,49 +101,6 @@ ReadDataAce <- function(FileName, Scale="Lognormale")
 }
 
 
-ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
-# Genration of confidence intervals
-{
-    # list of conditions
-    ListConditions <- levels(ExpDataTable$Conditions)
-
-    if (length(ListConditions) != 0){
-          # DataFrame initialisation
-          NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[1]])
-          if (NbData > 30) {
-              mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-          } else {
-              mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-          }
-          CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[1]])
-          sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-          LowerLimit <- qnorm(CDF - sef * mZP_Value)
-          HigherLimit <- qnorm(CDF + sef * mZP_Value)
-
-          ConfidenceDataTable <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[1]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[1])
-
-          if (length(ListConditions) > 1) {
-              for (i in 2:length(ListConditions)){
-                NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
-                if (NbData > 30) {
-                    mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-                } else {
-                    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-                }
-                CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-                sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-                LowerLimit <- qnorm(CDF - sef * mZP_Value)
-                HigherLimit <- qnorm(CDF + sef * mZP_Value)
-
-                NewData <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i])
-                ConfidenceDataTable <- StackData(ConfidenceDataTable,NewData)
-              }
-          }
-      }
-    return(ConfidenceDataTable)
-}
-
-
 StackData <- function(DataTable1, DataTable2)
 # Merge 2 DataTable
 {
@@ -229,6 +186,49 @@ BlackModelization <- function(DataTable, DeviceID)
     write.table(data.frame('A'=A,'n'=n,'Ea'=Ea,'Scale'=Scale,"RSS"=RSS,"Rsq=",Rsq),"fit.txt",quote=FALSE,sep="\t")
     print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," RSS=",RSS," Rsq=",Rsq,sep=""))
     return(ModelDataTable)
+}
+
+
+ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
+# Genration of confidence intervals
+{
+    # list of conditions
+    ListConditions <- levels(ExpDataTable$Conditions)
+
+    if (length(ListConditions) != 0){
+          # DataFrame initialisation
+          NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[1]])
+          if (NbData > 30) {
+              mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
+          } else {
+              mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
+          }
+          CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[1]])
+          sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
+          LowerLimit <- qnorm(CDF - sef * mZP_Value)
+          HigherLimit <- qnorm(CDF + sef * mZP_Value)
+
+          ConfidenceDataTable <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[1]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[1])
+
+          if (length(ListConditions) > 1) {
+              for (i in 2:length(ListConditions)){
+                NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
+                if (NbData > 30) {
+                    mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
+                } else {
+                    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
+                }
+                CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
+                sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
+                LowerLimit <- qnorm(CDF - sef * mZP_Value)
+                HigherLimit <- qnorm(CDF + sef * mZP_Value)
+
+                NewData <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i])
+                ConfidenceDataTable <- StackData(ConfidenceDataTable,NewData)
+              }
+          }
+      }
+    return(ConfidenceDataTable)
 }
 
 
@@ -332,7 +332,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
-BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
+BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
 # Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
 {
@@ -354,7 +354,7 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE,Save=TRUE)
                 }
           }
           ModelDataTable <- BlackModelization(DataTable, DeviceID)
-          ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable)
+          ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
 
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
