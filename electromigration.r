@@ -128,6 +128,8 @@ BlackModelization <- function(DataTable, DeviceID)
     k <- 1.38E-23 # Boltzmann
     e <- 1.6E-19 # electron charge
 
+    # Remove the units where status is 0
+    DataTable <- DataTable[DataTable$Status==1,]
 
     # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
     nls.control(maxiter = 100, tol = 1e-15, minFactor = 1/1024, printEval = FALSE, warnOnly = FALSE)
