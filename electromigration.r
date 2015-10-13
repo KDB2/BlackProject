@@ -74,15 +74,17 @@ CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="
 ReadDataAce <- function(FileName, Scale="Lognormale")
 # Read the file exportfile and store it in a dataframe
 # Data are cleaned to remove bad units
+# Exportfile from Ace and Mira have different headers,
+# therefore column numbers are used
 {
     # Read the file and store it
     ResTable <- read.delim(FileName)
     # Creation of the new dataframe
-    TTF <- ResTable["Lifetime.s."]
-    Status <- ResTable["Failed"]
-    Stress <- ResTable["Istress"]
-    Temperature <- ResTable["Temp"]
-    Condition <- paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="") #paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="")
+    TTF <- ResTable[,3]
+    Status <- ResTable[,2]
+    Stress <- ResTable[,5]
+    Temperature <- ResTable[,8]
+    Condition <- paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="") #paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="")
     ResTable <- data.frame(TTF,Status,Condition,Stress,Temperature)
     # Force the column names
     names(ResTable) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
