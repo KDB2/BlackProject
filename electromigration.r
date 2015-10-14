@@ -22,9 +22,9 @@ Ranking <- function(TTF)
 }
 
 
-CalculProbability <- function(Probability, Scale="Lognormale")
+CalculProbability <- function(Probability, Scale="Lognormal")
 # Given a vector Probability of probabilities, the function calculates
-# the correspondence in standard deviations for the lognormale case.
+# the correspondence in standard deviations for the Lognormal case.
 # Calculation of the Weibit is made for the Weibull case.
 {
   if (Scale=="Weibull") {
@@ -48,11 +48,11 @@ Clean <- function(DataTable)
 }
 
 
-CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormale")
+CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormal")
 # Creation of the dataframe assembling the TTF, the status of the samples,
 # the probability, the condition (stickers for charts),
 # the stress condition and the temperature used durng the stress.
-# The probability is calculated according to lognormale or Weibull distribution.
+# The probability is calculated according to Lognormal or Weibull distribution.
 # Data are given clean.
 
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature)
@@ -61,7 +61,7 @@ CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="
     if (Scale=="Weibull") {
         Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
     } else {
-        Proba <- CalculProbability(rk,Scale="Lognormale") # Probability calculation Lognormale
+        Proba <- CalculProbability(rk,Scale="Lognormal") # Probability calculation Lognormal
     }
     # Generation of the final data frame
     DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature)
@@ -69,7 +69,7 @@ CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="
 }
 
 
-ReadDataAce <- function(FileName, Scale="Lognormale")
+ReadDataAce <- function(FileName, Scale="Lognormal")
 # Read the file exportfile and store it in a dataframe
 # Data are cleaned to remove bad units
 # Exportfile from Ace and Mira have different headers,
@@ -93,7 +93,7 @@ ReadDataAce <- function(FileName, Scale="Lognormale")
     if (Scale=="Weibull") {
         ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Weibull")
     } else {
-        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Lognormale")
+        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Lognormal")
     }
     # We force the new names here as a security check.
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature")
@@ -234,7 +234,7 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 }
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title="", Scale="Lognormale", ErrorBands=TRUE, Save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
 {
@@ -262,7 +262,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
         }
     ProbaNorm <- CalculProbability(ListeProba/100,Scale)
 
-    } else { # Lognormale
+    } else { # Lognormal
         if (ExpDataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
             ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
         }
@@ -361,6 +361,6 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormale",ErrorBand,Save)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
     #return(DataTable)
 }
