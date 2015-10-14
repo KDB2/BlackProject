@@ -10,6 +10,7 @@ library('ggplot2')
 library('MASS')
 library('scales')
 library('grid')
+library('nlstools')
 
 
 Ranking <- function(TTF)
@@ -132,8 +133,8 @@ BlackModelization <- function(DataTable, DeviceID)
     DataTable <- DataTable[DataTable$Status==1,]
 
     # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-    nls.control(maxiter = 100, tol = 1e-15, minFactor = 1/1024, printEval = FALSE, warnOnly = FALSE)
-    Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))#,trace = T)
+    #nls.control(maxiter = 100, tol = 1e-15, minFactor = 1/1024, printEval = FALSE, warnOnly = FALSE)
+    Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
     #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
     # Parameters Extraction
     A <- coef(Model)[1]
@@ -185,6 +186,12 @@ BlackModelization <- function(DataTable, DeviceID)
             ModelDataTable <- StackData(ModelDataTable,NewData)
         }
     }
+    # Drawing of the residual plots
+    plot(nlsResiduals(Model))
+    # Display of fit results
+    print(summary(Model))
+    print(coef(Model))
+    print(sd(resid(Model)))
     write.table(data.frame('A'=A,'n'=n,'Ea'=Ea,'Scale'=Scale,"RSS"=RSS,"Rsq=",Rsq),"fit.txt",quote=FALSE,sep="\t")
     print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," RSS=",RSS," Rsq=",Rsq,sep=""))
     return(ModelDataTable)
