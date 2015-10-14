@@ -14,7 +14,7 @@ CreateExportFiles.Ace <- function(DegFileName,TCRFileName)
 # Use a Degradation and a TCR file to produce the exportfile
 {
     # Device and Width parameters
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/0.18_um_Technology/0.18 FabB/BEOL/Elmig/ListDeviceName.txt")
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
 
     DegFile <- read.delim(DegFileName,sep="")
     names(DegFile) <- c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type")
@@ -51,7 +51,7 @@ CreateExportFiles.Mira <- function(DegFileName,TCRFileName)
 # Use a Degradation and a TCR file to produce the exportfile
 {
     # Device and Width parameters
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/0.18_um_Technology/0.18 FabB/BEOL/Elmig/ListDeviceName.txt")
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
 
     DegFile <- read.delim(DegFileName,sep="")
     names(DegFile) <- c("#RESISTANCE#pkgNum", "ValueAtTimeZero","MinAchieved","MinUsedForFailure","FailureIteration","LastValue","NowValue","Split","FailureTime","FailedDevice","DUT","Extr1","Extr2","Extr3","Extr4","Ref")
@@ -93,7 +93,7 @@ CreateExportFiles.EM <- function()
 # Open all deg and TCR files from the workfolder
 {
     # Device and Width parameters
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/0.18_um_Technology/0.18 FabB/BEOL/Elmig/ListDeviceName.txt")
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
     # File to be read
     ListDegFiles <- list.files(pattern="*deg.txt")
     ListTCRFiles <- list.files(pattern="*TCR.txt")
