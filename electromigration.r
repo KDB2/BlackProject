@@ -3,15 +3,13 @@
 # Extraction of Black's parameters is performed.
 # September 2015
 # Emmanuel Chery
-# Version 0.3
-
+# Version 0.4
 
 # Required Packages
 library('ggplot2')
 library('MASS')
 library('scales')
 library('grid')
-
 
 
 Ranking <- function(TTF)
@@ -336,7 +334,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
-BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
+BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
 # Main function calling the other. The one to use to open all the files.
 # Open all the exportfiles from the workfolder
 {
@@ -363,6 +361,6 @@ BlackAnalysis <- function(Scale="Lognormale",ErrorBand=TRUE, ConfidenceValue=0.9
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale,ErrorBand,Save)
+    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormale",ErrorBand,Save)
     #return(DataTable)
 }
