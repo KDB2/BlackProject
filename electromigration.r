@@ -344,13 +344,13 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # Import the first file to create the 3 dataframes
-          DataTable <- ReadDataAce(ListFiles[1],Scale)
+          DataTable <- ReadDataAce(ListFiles[1],Scale="Lognormal")
 
           # Let's now check if other files are available
           if (length(ListFiles) > 1){
                 # loop to open all the files and stack them in the dataframe
                 for (i in 2:length(ListFiles)){
-                    NewDataTable <- ReadDataAce(ListFiles[i],Scale)
+                    NewDataTable <- ReadDataAce(ListFiles[i],Scale="Lognormal")
                     # Merging the tables
                     DataTable <- StackData(DataTable,NewDataTable)
                 }
