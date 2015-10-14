@@ -72,12 +72,10 @@ CreateExportFiles.Mira <- function(DegFileName,TCRFileName)
     DeviceID <- strsplit(DegFileName,split="_")[[1]][2]
     W <- ListDevice$Width[ListDevice$Device==DeviceID]
 
-    #NewFile <- data.frame(DegFile[DegFile$FailureIteration>0,1:2],DegFile[DegFile$FailureIteration>0,8:10],Istress,L,W,Temp,DeviceID,TCRFile[TCRFile$Device==4,3:8])
-    #names(NewFile) <- c("#RESISTANCE#pkgNum","ValueAtTimeZero","Split","FailureTime","FailedDevice","Istress","L","W","Temp","DeviceID","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
-    NewFile <- data.frame(DegFile[DegFile$FailureIteration>0,1],DegFile[DegFile$FailureIteration>0,10],DegFile[DegFile$FailureIteration>0,9],DegFile[DegFile$FailureIteration>0,8],Istress,L,W,Temp,DeviceID,DegFile[DegFile$FailureIteration>0,2],TCRFile[TCRFile$Device==4,3:8])
-    #names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
-    names(NewFile) <- c("#RESISTANCE#pkgNum","FailedDevice","FailureTime","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
-    #names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
+    # Mira is made compatible with ACE for the 8 first colum. TTF are in hours. COnversion is made to seconds with 3600 factor. 
+    NewFile <- data.frame(DegFile[DegFile$FailureIteration>0,1],DegFile[DegFile$FailureIteration>0,10],3600*DegFile[DegFile$FailureIteration>0,9],DegFile[DegFile$FailureIteration>0,8],Istress,L,W,Temp,DeviceID,DegFile[DegFile$FailureIteration>0,2],TCRFile[TCRFile$Device==4,3:8])
+    #names(NewFile) <- c("#RESISTANCE#pkgNum","FailedDevice","FailureTime","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
+    names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
 
     # Saving in a file
     #NewFile[,11:16] <-format(NewFile[,11:16], scientific = FALSE)
