@@ -146,7 +146,7 @@ BlackModelization <- function(DataTable, DeviceID)
     # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
     TSS <- sum(sapply(split(DataTable[,1],DataTable$Conditions),function(x) sum((x-mean(x))^2)))
     Rsq <- 1-RSS/TSS # R-squared measure
-
+    print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
 
     # Using the parameters and the conditions, theoretical distributions are created
     ListConditions <- levels(DataTable$Conditions)
@@ -190,10 +190,11 @@ BlackModelization <- function(DataTable, DeviceID)
     plot(nlsResiduals(Model))
     # Display of fit results
     print(summary(Model))
-    print(coef(Model))
-    print(sd(resid(Model)))
+    #print(coef(Model))
+    #print(sd(resid(Model)))
     write.table(data.frame('A'=A,'n'=n,'Ea'=Ea,'Scale'=Scale,"RSS"=RSS,"Rsq=",Rsq),"fit.txt",quote=FALSE,sep="\t")
-    print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," RSS=",RSS," Rsq=",Rsq,sep=""))
+    #print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," RSS=",RSS," Rsq=",Rsq,sep=""))
+    print(paste("Residual squared sum: ",RSS,sep=""))
     return(ModelDataTable)
 }
 
