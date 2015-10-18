@@ -200,7 +200,7 @@ BlackModelization <- function(DataTable, DeviceID)
 
 
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
-# Genration of confidence intervals
+# Generation of confidence intervals
 {
     # list of conditions
     ListConditions <- levels(ExpDataTable$Conditions)

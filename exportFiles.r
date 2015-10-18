@@ -14,34 +14,44 @@ CreateExportFiles.Ace <- function(DegFileName,TCRFileName)
 # Use a Degradation and a TCR file to produce the exportfile
 {
     # Device and Width parameters
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
+    #ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
 
-    DegFile <- read.delim(DegFileName,sep="")
-    names(DegFile) <- c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type")
-    TCRFile <- read.delim(TCRFileName,sep="",skip=1)
-    names(TCRFile) <- c("Device","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
+    DegFile <- read.delim(DegFileName,sep="",
+     col.names = c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type"))
+    TCRFile <- read.delim(TCRFileName,sep="",skip=1,
+    col.names = c("Device","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)"))
 
-    # Merge the files with additional data:
-    # Split
-    Split<-c(1,2)
+    # This section allows to work with degradation file were several conditions have been stored.
+    # Creation of the condition vector. A condition is a couple current/Temperature
+    Conditions <- factor(paste(DegFile[,5]*1E3,"mA/",DegFile[,4]-273.16,"°C",sep=""))
+    # Add Conditions to both tables. Will be used to sort them.
+    DegFile[,"Conditions"] <- Conditions
+    TCRFile[,"Conditions"] <- Conditions
+
+    # Creation of one export file per condition
+    for (i in 1:length(levels(Conditions))){
+        # Merge the files with additional data:
+        # Split Istress Temp
+        Split<-c(1,2)
+        Istress <- DegFile[DegFile$Conditions == levels(Conditions)[i],5]*1E3 # mA
+        Temp <- DegFile[DegFile$Conditions == levels(Conditions)[i],4]-273.16 # °C
+        # DeviceID, Length and width
+        L <- c(200,400)
+        DeviceID <- strsplit(DegFileName,split="_")[[1]][2]
+        W <-3# ListDevice$Width[ListDevice$Device==DeviceID]
+
+        # DataFrame creation
+        NewFile <- data.frame(DegFile[DegFile$Conditions == levels(Conditions)[i],1:3],Split,Istress,L,W,Temp,DeviceID,TCRFile[TCRFile$Conditions == levels(Conditions)[i],2:14])
+        names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
+
+        # Saving in a file
+        FileName <- paste(strsplit(DegFileName,split="_")[[1]][1],DeviceID,Istress[1],Temp[1],"exportfile.txt",sep="_")
+        write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+    }
+
     # Istress extracted from filename and mA is removed
-    Istress <- strsplit(DegFileName,split="_")[[1]][3]
-    Istress <- as.numeric(substr(Istress, 1, nchar(Istress)-2))
-    # Temp extracted from filename and C is removed
-    Temp <- strsplit(DegFileName,split="_")[[1]][4]
-    Temp <- as.numeric(substr(Temp, 1, nchar(Temp)-1))
-    # DeviceID, Length and width
-    L <- c(200,400)
-    DeviceID <- strsplit(DegFileName,split="_")[[1]][2]
-    W <- ListDevice$Width[ListDevice$Device==DeviceID]
-
-    # DataFrame creation
-    NewFile <- data.frame(DegFile[,1:3],Split,Istress,L,W,Temp,DeviceID,TCRFile[,2:14])
-    names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
-
-    # Saving in a file
-    FileName <- paste(substr(DegFileName, 1, nchar(DegFileName)-7),"exportfile.txt",sep="")
-    write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+    #Istress <- strsplit(DegFileName,split="_")[[1]][3]
+    #Istress <- as.numeric(substr(Istress, 1, nchar(Istress)-2))
 }
 
 
@@ -72,7 +82,7 @@ CreateExportFiles.Mira <- function(DegFileName,TCRFileName)
     DeviceID <- strsplit(DegFileName,split="_")[[1]][2]
     W <- ListDevice$Width[ListDevice$Device==DeviceID]
 
-    # Mira is made compatible with ACE for the 8 first colum. TTF are in hours. COnversion is made to seconds with 3600 factor. 
+    # Mira is made compatible with ACE for the 8 first colum. TTF are in hours. COnversion is made to seconds with 3600 factor.
     NewFile <- data.frame(DegFile[DegFile$FailureIteration>0,1],DegFile[DegFile$FailureIteration>0,10],3600*DegFile[DegFile$FailureIteration>0,9],DegFile[DegFile$FailureIteration>0,8],Istress,L,W,Temp,DeviceID,DegFile[DegFile$FailureIteration>0,2],TCRFile[TCRFile$Device==4,3:8])
     #names(NewFile) <- c("#RESISTANCE#pkgNum","FailedDevice","FailureTime","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
     names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","ValueAtTimeZero","Rref(in Ohms)","TCR(in %/°C)","R(stress)","T(stress)","T(stress)-OvenT","Theta(°C/W)")
