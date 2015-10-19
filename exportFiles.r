@@ -14,12 +14,12 @@ CreateExportFiles.Ace <- function(DegFileName,TCRFileName)
 # Use a Degradation and a TCR file to produce the exportfile
 {
     # Device and Width parameters
-    #ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
 
-    DegFile <- read.delim(DegFileName,sep="",
-     col.names = c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type"))
-    TCRFile <- read.delim(TCRFileName,sep="",skip=1,
-    col.names = c("Device","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)"))
+    DegFile <- read.delim(DegFileName,sep="")
+    names(DegFile) = c("Device","Failed","Lifetime[s]","StressTemp[K]","Positive Current[A]","Negative Current[A]","Duty Cycle","Pulse Width","Stress Type")
+    TCRFile <- read.delim(TCRFileName,sep="",skip=1)
+    names(TCRFile) = c("Device","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
 
     # This section allows to work with degradation file were several conditions have been stored.
     # Creation of the condition vector. A condition is a couple current/Temperature
@@ -28,25 +28,33 @@ CreateExportFiles.Ace <- function(DegFileName,TCRFileName)
     DegFile[,"Conditions"] <- Conditions
     TCRFile[,"Conditions"] <- Conditions
 
+    # Add Split column
+    DegFile[DegFile$Device<33,"Split"] <- 1
+    DegFile[DegFile$Device>32,"Split"] <- 2
+    # Add Length column
+    DegFile[DegFile$Device<33,"L"] <- 200
+    DegFile[DegFile$Device>32,"L"] <- 400
+
     # Creation of one export file per condition
     for (i in 1:length(levels(Conditions))){
         # Merge the files with additional data:
         # Split Istress Temp
-        Split<-c(1,2)
+        Split <- DegFile$Split[DegFile$Conditions == levels(Conditions)[i]]
         Istress <- DegFile[DegFile$Conditions == levels(Conditions)[i],5]*1E3 # mA
         Temp <- DegFile[DegFile$Conditions == levels(Conditions)[i],4]-273.16 # °C
         # DeviceID, Length and width
-        L <- c(200,400)
+        L <- DegFile$L[DegFile$Conditions == levels(Conditions)[i]]
         DeviceID <- strsplit(DegFileName,split="_")[[1]][2]
-        W <-3# ListDevice$Width[ListDevice$Device==DeviceID]
+        W <- ListDevice$Width[ListDevice$Device==DeviceID]
 
         # DataFrame creation
         NewFile <- data.frame(DegFile[DegFile$Conditions == levels(Conditions)[i],1:3],Split,Istress,L,W,Temp,DeviceID,TCRFile[TCRFile$Conditions == levels(Conditions)[i],2:14])
         names(NewFile) <- c("Device","Failed","Lifetime[s]","Split","Istress","L","W","Temp","DeviceID","Rref[Ohm]","TCR[%/°C]","Rref[Ohm](High I)","TCR[%/°C](High I)","Rref[Ohm](Low I)","TCR[%/°C](Low I)","R[Ohm] (stress)","Temperature[°C](High I)","Temperature[°C](Low I)","Temperature[°C](Opt)","R[Ohm](Init Temp Low I)","R[Ohm](stress Temp Low I)","R[Ohm](stress Temp High I)")
 
         # Saving in a file
-        FileName <- paste(strsplit(DegFileName,split="_")[[1]][1],DeviceID,Istress[1],Temp[1],"exportfile.txt",sep="_")
+        FileName <- paste(strsplit(DegFileName,split="_")[[1]][1],"_",DeviceID,"_",Istress[1],"mA_",Temp[1],"C_exportfile.txt",sep="")
         write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+        print(paste(FileName, "created.",sep=" "))
     }
 
     # Istress extracted from filename and mA is removed
