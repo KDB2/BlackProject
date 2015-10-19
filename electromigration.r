@@ -90,12 +90,35 @@ ReadDataAce <- function(FileName, Scale="Lognormal")
     # Cleaning
     ResTable <- Clean(ResTable)
 
+    # let's check if we have several conditions in this file.
+    CondList <- levels(factor(Condition))
+
+    # We have at least 1 condition. Let's initialize ExpDataTable with it.
     # Probability is missing. Let's add it.
     if (Scale=="Weibull") {
-        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Weibull")
+        ExpDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[1]], ResTable$Status[ResTable$Conditions==CondList[1]],
+          ResTable$Condition[ResTable$Conditions==CondList[1]], ResTable$Stress[ResTable$Conditions==CondList[1]], ResTable$Temperature[ResTable$Conditions==CondList[1]], Scale="Weibull")
     } else {
-        ExpDataTable <- CreateDataFrame(ResTable$TTF, ResTable$Status, ResTable$Condition, ResTable$Stress, ResTable$Temperature, Scale="Lognormal")
+        ExpDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[1]], ResTable$Status[ResTable$Conditions==CondList[1]],
+          ResTable$Condition[ResTable$Conditions==CondList[1]], ResTable$Stress[ResTable$Conditions==CondList[1]], ResTable$Temperature[ResTable$Conditions==CondList[1]], Scale="Lognormal")
     }
+
+    # Check if there is aditional conditions
+    if (length(CondList) > 1 ){
+        for (i in 2:length(CondList)){
+            if (Scale=="Weibull") {
+                AddDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
+                  ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull")
+            } else {
+                AddDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
+                  ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal")
+          }
+            ExpDataTable <- StackData(ExpDataTable,AddDataTable)
+        }
+
+    }
+
+
     # We force the new names here as a security check.
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature")
     return(ExpDataTable)
