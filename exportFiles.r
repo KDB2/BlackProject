@@ -63,12 +63,17 @@ CreateExportFiles.Ace <- function(DegFileName,TCRFileName)
             UserChoice <- readline(prompt=paste("File ",FileName, " is already present. Keep[K], Replace[R], Merge[M]? (Default=K)",sep=""))
 
               if (UserChoice=="M" || UserChoice=="m"){
-                  # Store the old File and stack it with NewFile
+                  # Store the old File and stack it with NewFile if they are both from ACE
                   OldFile <- read.delim(FileName)
-                  names(OldFile) <- names(NewFile)
-                  NewFile <- rbind(OldFile,NewFile)
-                  write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
-                  print(paste("Data have been added to",FileName,sep=" "))
+
+                  if ( length(names(OldFile)) == length(names(NewFile)) ) {
+                      names(OldFile) <- names(NewFile)
+                      NewFile <- rbind(OldFile,NewFile)
+                      write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+                      print(paste("Data have been added to",FileName,sep=" "))
+                  } else {
+                      print("You are trying to merge data from ACE and MIRA. Impossible operation. Old file has been kept.")
+                  }
 
               } else if (UserChoice=="R" || UserChoice=="r"){
                   write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
@@ -129,12 +134,17 @@ CreateExportFiles.Mira <- function(DegFileName,TCRFileName)
         UserChoice <- readline(prompt=paste("File ",FileName, " is already present. Keep[K], Replace[R], Merge[M]? (Default=K)",sep=""))
 
           if (UserChoice=="M" || UserChoice=="m"){
-              # Store the old File and stack it with NewFile
+              # Store the old File and stack it with NewFile if they are both from MIRA
               OldFile <- read.delim(FileName)
-              names(OldFile) <- names(NewFile)
-              NewFile <- rbind(OldFile,NewFile)
-              write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
-              print(paste("Data have been added to",FileName,sep=" "))
+
+              if ( length(names(OldFile)) == length(names(NewFile)) ) {
+                  names(OldFile) <- names(NewFile)
+                  NewFile <- rbind(OldFile,NewFile)
+                  write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
+                  print(paste("Data have been added to",FileName,sep=" "))
+              } else {
+                  print("You are trying to merge data from ACE and MIRA. Impossible operation. Old file has been kept.")
+              }
 
           } else if (UserChoice=="R" || UserChoice=="r"){
               write.table(NewFile,file=FileName,sep="\t",row.names=FALSE,quote=FALSE)
