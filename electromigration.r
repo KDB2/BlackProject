@@ -3,7 +3,7 @@
 # Extraction of Black's parameters is performed.
 # September 2015
 # Emmanuel Chery
-# Version 0.4
+# Version 0.5
 
 # Required Packages
 library('ggplot2')
@@ -128,8 +128,9 @@ ReadDataAce <- function(FileName, Scale="Lognormal")
 StackData <- function(DataTable1, DataTable2)
 # Merge 2 DataTable
 {
-    NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
-    NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
+    NewDataTable <- rbind(DataTable1, DataTable2)
+    #NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
+    #NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
     return(NewDataTable)
 }
 
