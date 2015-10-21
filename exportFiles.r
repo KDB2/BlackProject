@@ -194,5 +194,3 @@ CreateExportFiles.EM <- function()
         }
     }
 }
-
-# # if exportfile is already present user is being offered several option
