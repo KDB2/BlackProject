@@ -1,4 +1,28 @@
-# BlackProject
-Work in Progress -- Laboratory for amsReliability package
+# RoadMap
 
-Language: R
+## Exportfiles:
+- Upgrade Mira export file creation to take into account the case where several conditions are present.
+- Mira: clean the table to remove bad unit before working with it. Will make code more readable.
+- [fixed] Force exportfile creation option: avoid creating an exportfile if not needed
+- [Fixed] Handle the case where a second experiment with the same condition is started.
+  - Remove the ForceOverWrite option
+  - Detect if condition has already an exportfile
+  - Propose to user 3 options: Keep, Replace, Stack
+- [Fixed] Handle case where you want to Merge data from Ace and from Mira --> Error message saying this is not possible and old file is kept.
+
+## Model:
+- [fixed] Take into account that several conditions can be present in one exportfile.
+- Handle case where 2 experiments with same conditions have been started.
+- Robust modelisation: fit 1 followed by a study on outliners leading to a second fit.
+- Let's check hierachical models to check if they can be useful for self heating interference.
+- Store the model param and fit result in a file.
+- Force fit option: avoid fitting again if the parameters are available
+- Change ReadDataAce to take care of conditions present in different files. First read all the data and store them in dataframe. Then list all conditions (levels) and for each conditions calculate probabilities. Store this is the ExpDataTable.
+- [fixed] Change StackData function to use rbind
+- [Will not be fixed] Depreciated StackData function as this is done by rbind?
+
+## Chart:
+- Enhance legend presentation to include:
+  - MTTF and scale
+  - Number of samples + number of censored samples
+  - Model parameters
