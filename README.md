@@ -9,6 +9,7 @@
   - Detect if condition has already an exportfile
   - Propose to user 3 options: Keep, Replace, Stack
 - [Fixed] Handle case where you want to Merge data from Ace and from Mira --> Error message saying this is not possible and old file is kept.
+- NBTI exportfile to script.
 
 ## Model:
 - [fixed] Take into account that several conditions can be present in one exportfile.
