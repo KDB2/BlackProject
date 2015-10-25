@@ -70,54 +70,58 @@ CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="
 }
 
 
-ReadDataAce <- function(FileName, Scale="Lognormal")
-# Read the file exportfile and store it in a dataframe
+ReadDataAce <- function(ListFileName, Scale="Lognormal")
+# Read the exportfiles listed in ListFileName and store them in a dataframe.
+# First read all the files and then calculate the probability scale
+# for each condition. This allows to work with conditions splitted in different files.
 # Data are cleaned to remove bad units
 # Exportfile from Ace and Mira have different headers,
 # therefore column numbers are used
 {
-    # Read the file and store it
-    ResTable <- read.delim(FileName)
-    # Creation of the new dataframe
-    TTF <- ResTable[,3]
-    Status <- ResTable[,2]
-    Stress <- ResTable[,5]
-    Temperature <- ResTable[,8]
-    Condition <- paste(ResTable[,5],"mA/",ResTable[,8],"C",sep="") #paste(ResTable[,"Istress"],"mA/",ResTable[,"Temp"],"°C",sep="")
-    ResTable <- data.frame(TTF,Status,Condition,Stress,Temperature)
-    # Force the column names
+    # ResTable initialisation
+    ResTable <- data.frame()
+
+    for (i in seq_along(ListFileName)){
+
+        # Read the file and store it in a temporary dataframe
+        TempTable <- read.delim(ListFileName[i])
+        # Creation of the new dataframe
+        TTF <- TempTable[,3]
+        Status <- TempTable[,2]
+        Stress <- TempTable[,5]
+        Temperature <- TempTable[,8]
+        Condition <- paste(TempTable[,5],"mA/",TempTable[,8],"C",sep="") #paste(TempTable[,"Istress"],"mA/",TempTable[,"Temp"],"°C",sep="")
+        # Creation of a dataframe to store the data
+        TempDataFrame <- data.frame(TTF,Status,Condition,Stress,Temperature)
+        # Force the column names
+        names(TempDataFrame) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
+        # Store the data in the final table
+        ResTable <- rbind(ResTable,TempDataFrame)
+    }
+    # security check, we force again the name on ResTable
     names(ResTable) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
-    # Cleaning
+
+    # Cleaning to remove units where status is not 1 or 0.
     ResTable <- Clean(ResTable)
 
-    # let's check if we have several conditions in this file.
-    CondList <- levels(factor(Condition))
+    # List the conditions present in ResTable
+    CondList <- levels(factor(ResTable$Conditions))
 
-    # We have at least 1 condition. Let's initialize ExpDataTable with it.
     # Probability is missing. Let's add it.
-    if (Scale=="Weibull") {
-        ExpDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[1]], ResTable$Status[ResTable$Conditions==CondList[1]],
-          ResTable$Condition[ResTable$Conditions==CondList[1]], ResTable$Stress[ResTable$Conditions==CondList[1]], ResTable$Temperature[ResTable$Conditions==CondList[1]], Scale="Weibull")
-    } else {
-        ExpDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[1]], ResTable$Status[ResTable$Conditions==CondList[1]],
-          ResTable$Condition[ResTable$Conditions==CondList[1]], ResTable$Stress[ResTable$Conditions==CondList[1]], ResTable$Temperature[ResTable$Conditions==CondList[1]], Scale="Lognormal")
-    }
+    # Final dataframe is ExpDataTable
+    # Initialisation
+    ExpDataTable <- data.frame()
 
-    # Check if there is aditional conditions
-    if (length(CondList) > 1 ){
-        for (i in 2:length(CondList)){
-            if (Scale=="Weibull") {
-                AddDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-                  ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull")
-            } else {
-                AddDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-                  ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal")
-          }
-            ExpDataTable <- StackData(ExpDataTable,AddDataTable)
+    for (i in seq_along(CondList)){
+        if (Scale=="Weibull") {
+          TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
+            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull")
+        } else {
+          TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
+            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal")
         }
-
+        ExpDataTable <- rbind(ExpDataTable,TempDataTable)
     }
-
 
     # We force the new names here as a security check.
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature")
@@ -144,9 +148,9 @@ BlackModelization <- function(DataTable, DeviceID)
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature)
 {
     # Read the list of device to retrieve the section parameters.
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
-    W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
-    H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
+    #ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
+    W <- 1 #ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+    H <- 1 # ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
     S <- W*H*1E-12 # m^2
 
     # if S is a positive number different from 0, we can proceed:
@@ -163,7 +167,6 @@ BlackModelization <- function(DataTable, DeviceID)
       DataTable <- DataTable[DataTable$Status==1,]
 
       # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-      #nls.control(maxiter = 100, tol = 1e-15, minFactor = 1/1024, printEval = FALSE, warnOnly = FALSE)
       Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
       #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
       # Parameters Extraction
@@ -382,18 +385,8 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
     DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
-          # Import the first file to create the 3 dataframes
-          DataTable <- ReadDataAce(ListFiles[1],Scale="Lognormal")
-
-          # Let's now check if other files are available
-          if (length(ListFiles) > 1){
-                # loop to open all the files and stack them in the dataframe
-                for (i in 2:length(ListFiles)){
-                    NewDataTable <- ReadDataAce(ListFiles[i],Scale="Lognormal")
-                    # Merging the tables
-                    DataTable <- StackData(DataTable,NewDataTable)
-                }
-          }
+          # Import the file(s) and create the 3 dataframes
+          DataTable <- ReadDataAce(ListFiles,Scale="Lognormal")
           ModelDataTable <- BlackModelization(DataTable, DeviceID)
           ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
 
