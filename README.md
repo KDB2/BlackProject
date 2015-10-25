@@ -9,6 +9,7 @@
   - Detect if condition has already an exportfile
   - Propose to user 3 options: Keep, Replace, Stack
 - [Fixed] Handle case where you want to Merge data from Ace and from Mira --> Error message saying this is not possible and old file is kept.
+- NBTI exportfile to script.
 
 ## Model:
 - [fixed] Take into account that several conditions can be present in one exportfile.
@@ -18,7 +19,7 @@
 - Store the model param and fit result in a file.
 - Store all the data in the same file? 
 - Force fit option: avoid fitting again if the parameters are available
-- Change ReadDataAce and CreateDataFrame to take care of conditions present in different files. First read all the data and store them in dataframe. Then list all conditions (levels) and for each conditions calculate probabilities. Store this is the ExpDataTable. ReadDataAce needs to work with a list of file to load. and CreateDataFrame with a dataframe with several conditions.
+- Change ReadDataAce and CreateDataFrame to take care of conditions present in different files. First read all the data and store them in dataframe. Then list all conditions (levels) and for each conditions calculate probabilities. Store this in the ExpDataTable. ReadDataAce needs to work with a list of file to load. and CreateDataFrame with a dataframe with several conditions.
 - [fixed] Change StackData function to use rbind
 - [Will not be fixed] Depreciated StackData function as this is done by rbind?
 
