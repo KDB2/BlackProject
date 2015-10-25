@@ -221,40 +221,28 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 {
     # list of conditions
     ListConditions <- levels(ExpDataTable$Conditions)
+    # DataFrame initialisation
+    ConfidenceDataTable <- data.frame()
 
     if (length(ListConditions) != 0){
-          # DataFrame initialisation
-          NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[1]])
-          if (NbData > 30) {
-              mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-          } else {
-              mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-          }
-          CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[1]])
-          sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-          LowerLimit <- qnorm(CDF - sef * mZP_Value)
-          HigherLimit <- qnorm(CDF + sef * mZP_Value)
 
-          ConfidenceDataTable <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[1]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[1])
+          for (i in seq_along(ListConditions)){
 
-          if (length(ListConditions) > 1) {
-              for (i in 2:length(ListConditions)){
-                NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
-                if (NbData > 30) {
-                    mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-                } else {
-                    mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-                }
-                CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-                sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-                LowerLimit <- qnorm(CDF - sef * mZP_Value)
-                HigherLimit <- qnorm(CDF + sef * mZP_Value)
-
-                NewData <- data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i])
-                ConfidenceDataTable <- StackData(ConfidenceDataTable,NewData)
+              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
+              if (NbData > 30) {
+                  mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
+              } else {
+                  mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
               }
-          }
-      }
+              CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
+              sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
+              LowerLimit <- qnorm(CDF - sef * mZP_Value)
+              HigherLimit <- qnorm(CDF + sef * mZP_Value)
+
+              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
+                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
+        }
+    }
     return(ConfidenceDataTable)
 }
 
