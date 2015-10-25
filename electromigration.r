@@ -129,16 +129,6 @@ ReadDataAce <- function(ListFileName, Scale="Lognormal")
 }
 
 
-StackData <- function(DataTable1, DataTable2)
-# Merge 2 DataTable
-{
-    NewDataTable <- rbind(DataTable1, DataTable2)
-    #NewDataTable <- merge(DataTable1, DataTable2, all=TRUE)
-    #NewDataTable <- NewDataTable[order(NewDataTable$"Conditions"),]
-    return(NewDataTable)
-}
-
-
 BlackModelization <- function(DataTable, DeviceID)
 # Modelize the data using Black equation
 # Extract the parameters: A, n and Ea
