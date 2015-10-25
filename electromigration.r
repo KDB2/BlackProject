@@ -148,9 +148,9 @@ BlackModelization <- function(DataTable, DeviceID)
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature)
 {
     # Read the list of device to retrieve the section parameters.
-    #ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
-    W <- 1 #ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
-    H <- 1 # ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
+    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
+    W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+    H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
     S <- W*H*1E-12 # m^2
 
     # if S is a positive number different from 0, we can proceed:
