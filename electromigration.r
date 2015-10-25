@@ -183,42 +183,25 @@ BlackModelization <- function(DataTable, DeviceID)
 
       # Using the parameters and the conditions, theoretical distributions are created
       ListConditions <- levels(DataTable$Conditions)
-      # Initialisation with first condition
-      #####################################
 
-      # Conditions
-      Condition <- ListConditions[1]
-      I <- DataTable$Stress[DataTable$Conditions==ListConditions[1]][1]
-      Temp <- DataTable$Temperature[DataTable$Conditions==ListConditions[1]][1]  # °C
-
+      # Initialisation
+      ModelDataTable <- data.frame()
       # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
       Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
-      # TTF calculation
-      TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
 
-      # Dataframe creation
-      ModelDataTable <- data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp)
+      for (i in seq_along(ListConditions)){
+          # Experimental conditions:
+          Condition <- ListConditions[i]
+          I <- DataTable$Stress[DataTable$Conditions==Condition][1]
+          Temp <- DataTable$Temperature[DataTable$Conditions==Condition][1]  # °C
 
+          # TTF calculation
+          TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
 
-      # Loop to create the DataFrame
-      if ( length(ListConditions) > 1 ){
-          for (i in 2:length(ListConditions)){
-
-              # Conditions
-              Condition <- ListConditions[i]
-              I <- DataTable$Stress[DataTable$Conditions==ListConditions[i]][1]
-              Temp <- DataTable$Temperature[DataTable$Conditions==ListConditions[i]][1]  # °C
-
-              # TTF calculation
-              TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
-
-              # Dataframe creation
-              NewData <- data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp)
-
-              #Stack in 1 global table
-              ModelDataTable <- StackData(ModelDataTable,NewData)
-          }
+          # Dataframe creation
+          ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp))
       }
+
       # Drawing of the residual plots
       plot(nlsResiduals(Model))
       # Display of fit results
