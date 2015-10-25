@@ -19,7 +19,7 @@
 - Store the model param and fit result in a file.
 - Store all the data in the same file? 
 - Force fit option: avoid fitting again if the parameters are available
-- Change ReadDataAce and CreateDataFrame to take care of conditions present in different files. First read all the data and store them in dataframe. Then list all conditions (levels) and for each conditions calculate probabilities. Store this is the ExpDataTable. ReadDataAce needs to work with a list of file to load. and CreateDataFrame with a dataframe with several conditions.
+- Change ReadDataAce and CreateDataFrame to take care of conditions present in different files. First read all the data and store them in dataframe. Then list all conditions (levels) and for each conditions calculate probabilities. Store this in the ExpDataTable. ReadDataAce needs to work with a list of file to load. and CreateDataFrame with a dataframe with several conditions.
 - [fixed] Change StackData function to use rbind
 - [Will not be fixed] Depreciated StackData function as this is done by rbind?
 
