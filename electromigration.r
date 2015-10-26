@@ -326,12 +326,14 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 
     print(Graph)
 
-    # Save as png
+    # Save as png & pdf
     if (Save == TRUE){
         if (Title != ""){
-            ggsave(paste(Title,"png",sep="."))
+            ggsave(filename=paste(Title,"png",sep="."),dpi=300)
+            ggsave(filename=paste(Title,"pdf",sep="."))
         } else {
-            ggsave("Chart.png")
+            ggsave(filename="Chart.png",dpi=300)
+            ggsave(filename="Chart.pdf")
         }
     }
 }
