@@ -19,8 +19,8 @@
 - [fixed] Depreciated StackData function as this is done by rbind?
 - Robust modelisation: fit 1 followed by a study on outliners leading to a second fit.
 - Let's check hierachical models to check if they can be useful for self heating interference.
-- Store the model param and fit result in a file.
-- Store all the data in the same file?
+- [fixed] Store the model param and fit result in a file.
+- [fixed] Store all the data in the same file?
 - Force fit option: avoid fitting again if the parameters are available
 
 ## Chart:
