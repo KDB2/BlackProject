@@ -3,7 +3,7 @@
 # Extraction of Black's parameters is performed.
 # September 2015
 # Emmanuel Chery
-# Version 0.5
+# Version 0.6
 
 # Required Packages
 library('ggplot2')
@@ -346,9 +346,25 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
+#' Electromigration data analysis
+#'
+#' Extract Black's parameters from a set of electromigration experiments.
+#' The experimental data as well as the resulting model are displayed and
+#' can be saved. Extracted parameters are saved in a fit.txt file.
+#'
+#' @param ErrorBand displays the confidence intervals if set to TRUE.
+#' @param ConfidenceValue percentage used in the confidence interval calculation
+#' @param Save saves the chart as .png if set to TRUE.
+#'
+#' @return None
+#'
+#' @examples
+#' BlackAnalysis()
+#' BlackAnalysis(ErrorBand=FALSE)
+#' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
+#' @import ggplot2 MASS scales grid nlstools
+#' @export
 BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
-# Main function calling the other. The one to use to open all the files.
-# Open all the exportfiles from the workfolder
 {
     #rm(list=ls())
     ListFiles <- list.files(pattern="*exportfile.txt")
