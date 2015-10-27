@@ -28,3 +28,6 @@
   - MTTF and scale
   - Number of samples + number of censored samples
   - Model parameters
+
+## Documentation:
+- Use of roxygen to generate the doc.
