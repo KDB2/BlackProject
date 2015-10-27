@@ -154,10 +154,10 @@ BlackModelization <- function(DataTable, DeviceID)
       e <- 1.6E-19 # electron charge
 
       # Remove the units where status is 0
-      DataTable <- DataTable[DataTable$Status==1,]
+      CleanDataTable <- DataTable[DataTable$Status==1,]
 
       # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-      Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+      Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), CleanDataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
       #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
       # Parameters Extraction
       A <- coef(Model)[1]
@@ -167,12 +167,12 @@ BlackModelization <- function(DataTable, DeviceID)
       # Residual Sum of Squares
       RSS <- sum(resid(Model)^2)
       # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
-      TSS <- sum(sapply(split(DataTable[,1],DataTable$Conditions),function(x) sum((x-mean(x))^2)))
+      TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
       Rsq <- 1-RSS/TSS # R-squared measure
-      print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
+      #print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
 
       # Using the parameters and the conditions, theoretical distributions are created
-      ListConditions <- levels(DataTable$Conditions)
+      ListConditions <- levels(CleanDataTable$Conditions)
 
       # Initialisation
       ModelDataTable <- data.frame()
@@ -182,8 +182,8 @@ BlackModelization <- function(DataTable, DeviceID)
       for (i in seq_along(ListConditions)){
           # Experimental conditions:
           Condition <- ListConditions[i]
-          I <- DataTable$Stress[DataTable$Conditions==Condition][1]
-          Temp <- DataTable$Temperature[DataTable$Conditions==Condition][1]  # °C
+          I <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
+          Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
 
           # TTF calculation
           TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
@@ -196,11 +196,18 @@ BlackModelization <- function(DataTable, DeviceID)
       plot(nlsResiduals(Model))
       # Display of fit results
       print(summary(Model))
+      print(paste("Residual squared sum: ",RSS,sep=""))
       #print(coef(Model))
       #print(sd(resid(Model)))
-      write.table(data.frame('A'=A,'n'=n,'Ea'=Ea,'Scale'=Scale,'RSS'=RSS,'Rsq'=Rsq),"fit.txt",quote=FALSE,sep="\t")
-      #print(paste("Ea=",Ea,"eV, n=",n,", A=",A," Scale=",Scale," RSS=",RSS," Rsq=",Rsq,sep=""))
-      print(paste("Residual squared sum: ",RSS,sep=""))
+
+      # Save in a file
+      capture.output(summary(Model),file="fit.txt")
+      cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+      cat(RSS,file="fit.txt",append=TRUE)
+      cat("\n \n",file="fit.txt",append=TRUE)
+      cat("Experimental Data:",file="fit.txt",append=TRUE)
+      cat("\n",file="fit.txt",append=TRUE)
+      capture.output(DataTable,file="fit.txt",append=TRUE)
       return(ModelDataTable)
     }
 }
@@ -330,10 +337,10 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     if (Save == TRUE){
         if (Title != ""){
             ggsave(filename=paste(Title,"png",sep="."),dpi=300)
-            ggsave(filename=paste(Title,"pdf",sep="."))
+            #ggsave(filename=paste(Title,"pdf",sep="."))
         } else {
             ggsave(filename="Chart.png",dpi=300)
-            ggsave(filename="Chart.pdf")
+            #ggsave(filename="Chart.pdf")
         }
     }
 }
