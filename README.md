@@ -30,4 +30,4 @@
   - Model parameters
 
 ## Documentation:
-- Use of roxygen to generate the doc.
+- [fixed] Use of roxygen to generate the doc.
