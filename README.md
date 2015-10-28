@@ -27,9 +27,8 @@
 
 ## Chart:
 - Enhance legend presentation to include:
-  - MTTF and scale
-  - Number of samples + number of censored samples
-  - Model parameters
+  - MTTF, Number of samples + number of censored samples<-- the new stickers should be created after the modelisation and added to the dataframe.
+  - Model parameters <- adressed with annotate + clipping off
 
 ## Documentation:
 - [fixed] Use of roxygen to generate the doc.
