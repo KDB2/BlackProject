@@ -19,6 +19,8 @@
 - [fixed] Depreciated StackData function as this is done by rbind?
 - [fixed] Store the model param and fit result in a file.
 - [fixed] Store all the data in the same file?
+- [fixed] Create a function to display the data without modelizing (avoid error when only 1 or 2 conditions are available)
+- adapt ViewData to detect if TDDB or EM data are given.
 - Robust modelisation: fit 1 followed by a study on outliners leading to a second fit.
 - Let's check hierachical models to check if they can be useful for self heating interference.
 - Create a function that estimate the lifetime of the device. par: Scale, Ea, n, A, DeviceID, ConditionTable. Make it stand alone if user want to use it to check something. And add a call in BlackModelization (optional parameter).
