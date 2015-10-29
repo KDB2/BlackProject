@@ -382,3 +382,34 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
     #return(DataTable)
 }
+
+
+#' Electromigration data representation
+#'
+#' Read all the exportfiles from a folder in order to
+#' create a chart with a set of electromigration experiments.
+#'
+#' @param None
+#'
+#' @return None
+#'
+#' @examples
+#' ViewData.EM()
+#' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
+#' @export
+ViewData.EM <- function()
+{
+    #rm(list=ls())
+    ListFiles <- list.files(pattern="*exportfile.txt")
+    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
+    # case 1, there are one or several files available
+    if (length(ListFiles) != 0){
+          # Import the file(s) and create the 3 dataframes
+          DataTable <- ReadDataAce(ListFiles,Scale="Lognormal")
+
+    } else { # case 2, there are no files available
+          print("You need to create the export files first!")
+    }
+    CreateGraph(DataTable,DataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+    #return(DataTable)
+}
