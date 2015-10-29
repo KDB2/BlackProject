@@ -27,8 +27,8 @@
 
 ## Chart:
 - Enhance legend presentation to include:
-  - MTTF, Number of samples + number of censored samples<-- the new stickers should be created after the modelisation and added to the dataframe.
-  - Model parameters <- adressed with annotate + clipping off
+  - MTTF, Number of samples + number of censored samples<-- Create a table for this like in Minitab
+  - Model parameters <- adressed with annotate + clipping off (2nd table)
 
 ## Documentation:
 - [fixed] Use of roxygen to generate the doc.
