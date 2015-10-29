@@ -168,7 +168,7 @@ ViewData <- function(){
     # List electromigration files
     ListFilesEM <- list.files(pattern="*exportfile.txt")
     # List file TDDB
-    ListFilesTDDB <- list.files(pattern="*.xls") # TBD définir un meilleur critère de détection
+    ListFilesTDDB <- list.files(pattern="*.xlsx") # TBD définir un meilleur critère de détection
 
     if (length(ListFilesEM != 0)){
         ViewData.EM(ListFilesEM)
