@@ -152,6 +152,7 @@ BlackModelization <- function(DataTable, DeviceID)
       # Drawing of the residual plots
       plot(nlsResiduals(Model))
       # Display of fit results
+      print(DeviceID)
       print(summary(Model))
       print(paste("Residual squared sum: ",RSS,sep=""))
       #print(coef(Model))
@@ -233,15 +234,20 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
               SubListFiles <- ListFiles[grep(DeviceID[i],ListFiles)]
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles,Scale="Lognormal")
-              ModelDataTable <- BlackModelization(DataTable, DeviceID[i])
-              ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-              CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Lognormal",ErrorBand,Save)
+              # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
+              ModelDataTable <- try(BlackModelization(DataTable, DeviceID[i]),silent=TRUE)
+              # Check if the modelization is a succes
+              if (class(ModelDataTable) != "try-error"){
+                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Lognormal",ErrorBand,Save)
+              } else {
+                    CreateGraph(DataTable,DataTable,DataTable,DeviceID[i],Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+              }
           }
 
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-
     #return(DataTable)
 }
 

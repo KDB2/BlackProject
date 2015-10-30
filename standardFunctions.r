@@ -148,34 +148,3 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
         }
     }
 }
-
-
-#' Data display function
-#'
-#' Read all the exportfiles from a folder in order to
-#' create a chart with a set of experiments.
-#' Distinguish between electromigration and TDDB experiments
-#'
-#' @param None
-#'
-#' @return None
-#'
-#' @examples
-#' ViewData()
-#' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
-#' @export
-ViewData <- function(){
-    # List electromigration files
-    ListFilesEM <- list.files(pattern="*exportfile.txt")
-    # List file TDDB
-    ListFilesTDDB <- list.files(pattern="*.xlsx") # TBD définir un meilleur critère de détection
-
-    if (length(ListFilesEM != 0)){
-        ViewData.EM(ListFilesEM)
-    } else if (length(ListFilesTDDB != 0)) {
-        return(NULL) # to be defined when available
-    } else {
-        print("You need to create the exportfiles first!")
-    }
-
-}
