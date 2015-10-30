@@ -223,18 +223,25 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
 {
     #rm(list=ls())
     ListFiles <- list.files(pattern="*exportfile.txt")
-    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
+    #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
-          # Import the file(s) and create the 3 dataframes
-          DataTable <- ReadDataAce(ListFiles,Scale="Lognormal")
-          ModelDataTable <- BlackModelization(DataTable, DeviceID)
-          ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+          # List of DeviceID available in the selected exportfiles
+          DeviceID <- levels(sapply(ListFiles,function(x){factor(strsplit(x,split="_")[[1]][2])}))
+
+          for (i in seq_along(DeviceID)){
+              SubListFiles <- ListFiles[grep(DeviceID[i],ListFiles)]
+              # Import the file(s) and create the 3 dataframes + display data
+              DataTable <- ReadDataAce(SubListFiles,Scale="Lognormal")
+              ModelDataTable <- BlackModelization(DataTable, DeviceID[i])
+              ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+              CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Lognormal",ErrorBand,Save)
+          }
 
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
+
     #return(DataTable)
 }
 
@@ -243,7 +250,7 @@ ViewData.EM <- function(ListFiles)
 # Display of electromigration data without modelizing them
 {
     DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
-    
+
     # Import the file(s)
     DataTable <- ReadDataAce(ListFiles,Scale="Lognormal")
     # Plot the data without modelizing and without confidence Intervals
