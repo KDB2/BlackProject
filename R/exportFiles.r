@@ -34,7 +34,7 @@
 ###                                                                          ###
 ###       CreateExportFiles.Ace     Subfunction for Ace equipement           ###
 ###       CreateExportFiles.Mira    Subfunction for Mira equipement          ###
-###       CreateExportFiles.EM      Main function for electromigration       ###
+###       CreateExportFiles         Main function for electromigration       ###
 ###                                                                          ###
 ################################################################################
 
@@ -206,10 +206,10 @@ CreateExportFiles.Mira <- function(DegFileName,TCRFileName)
 #' @return None
 #'
 #' @examples
-#' CreateExportFiles.EM()
+#' CreateExportFiles()
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
 #' @export
-CreateExportFiles.EM <- function()
+CreateExportFiles <- function()
 {
     # Device and Width parameters
     ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")

@@ -51,7 +51,6 @@ library('nlstools')
 #################################
 
 
-
 CalculProbability <- function(Probability, Scale="Lognormal")
 # Given a vector Probability of probabilities, the function calculates
 # the correspondence in standard deviations for the Lognormal case.
