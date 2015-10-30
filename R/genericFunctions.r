@@ -1,25 +1,55 @@
-# Script collection for ams AG process reliability team.
-# This file includes standard generic functions usable.
-# October 2015
-# Emmanuel Chery
-# Version 0.6
+################################################################################
+###                                                                          ###
+###    INFORMATIONS                                                          ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       PACKAGE NAME        amsReliability                                 ###
+###       SECTION NAME        genericFunctions.r                             ###
+###       VERSION             0.7                                            ###
+###                                                                          ###
+###       AUTHOR              Emmanuel Chery                                 ###
+###       MAIL                emmanuel.chery@ams.com                         ###
+###       DATE                2015/10/30                                     ###
+###       PLATFORM            Windows 7 & Gnu/Linux 3.16                     ###
+###       R VERSION           R 3.1.1                                        ###
+###       REQUIRED PACKAGES   ggplot2, grid, MASS, nlstools, scales          ###
+###       LICENSE             GNU GENERAL PUBLIC LICENSE                     ###
+###                           Version 3, 29 June 2007                        ###
+###                                                                          ###
+###                                                                          ###
+###    DESCRIPTION                                                           ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       This package is a collection of scripts dedicated to help          ###
+###    the process reliability team of ams AG. It includes tools to          ###
+###    quickly visualize data and extract model parameters in order          ###
+###    to predict device lifetimes.                                          ###
+###                                                                          ###
+###       This section includes generic functions usable with every          ###
+###    degradation mechanism.                                                ###
+###                                                                          ###
+###                                                                          ###
+###    FUNCTIONS                                                             ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       CalculProbability         Standard deviation/weibit calculation    ###
+###       Clean                     Remove TTF associated to bad devices     ###
+###       CreateDataFrame           Place experimental data in a table       ###
+###       CreateGraph               In charge of data representation         ###
+###       ErrorEstimation           Calculation of confidence Intervals      ###
+###       Ranking                   Calculation of fraction estimators       ###
+###                                                                          ###
+################################################################################
 
-# Required Packages
+
+### List of Required Packages ###
 library('ggplot2')
 library('MASS')
 library('scales')
 library('grid')
 library('nlstools')
+#################################
 
-
-Ranking <- function(TTF)
-# Fraction estimator calculation
-# rk(i)=(i-0.3)/(n+0.4)
-# TTF is a vector.
-{
-    # ties.method="random" handles identical TTFs and provide a unique ID
-    rk <- (rank(TTF, ties.method="random")-0.3)/(length(TTF)+0.4)
-}
 
 
 CalculProbability <- function(Probability, Scale="Lognormal")
@@ -45,6 +75,26 @@ Clean <- function(DataTable)
     CleanedTable <- DataTable[DataTable$Status==1 | DataTable$Status==0,]
     CleanedTable <- CleanedTable[order(CleanedTable$"TTF"),] # Sort TTF
     return(CleanedTable)
+}
+
+
+CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormal")
+# Creation of the dataframe assembling the TTF, the status of the samples,
+# the probability, the condition (stickers for charts),
+# the stress condition and the temperature used durng the stress.
+# The probability is calculated according to Lognormal or Weibull distribution.
+# Data are given clean.
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
+{
+    rk <- Ranking(TTF) # Fraction estimator calculation
+    if (Scale=="Weibull") {
+        Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
+    } else {
+        Proba <- CalculProbability(rk,Scale="Lognormal") # Probability calculation Lognormal
+    }
+    # Generation of the final data frame
+    DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature)
+    return(DataTable)
 }
 
 
@@ -147,4 +197,45 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
             #ggsave(filename="Chart.pdf")
         }
     }
+}
+
+
+ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
+# Generation of confidence intervals
+{
+    # list of conditions
+    ListConditions <- levels(ExpDataTable$Conditions)
+    # DataFrame initialisation
+    ConfidenceDataTable <- data.frame()
+
+    if (length(ListConditions) != 0){
+
+          for (i in seq_along(ListConditions)){
+
+              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
+              if (NbData > 30) {
+                  mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
+              } else {
+                  mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
+              }
+              CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
+              sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
+              LowerLimit <- qnorm(CDF - sef * mZP_Value)
+              HigherLimit <- qnorm(CDF + sef * mZP_Value)
+
+              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
+                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
+        }
+    }
+    return(ConfidenceDataTable)
+}
+
+
+Ranking <- function(TTF)
+# Fraction estimator calculation
+# rk(i)=(i-0.3)/(n+0.4)
+# TTF is a vector.
+{
+    # ties.method="random" handles identical TTFs and provide a unique ID
+    rk <- (rank(TTF, ties.method="random")-0.3)/(length(TTF)+0.4)
 }

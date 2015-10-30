@@ -1,30 +1,42 @@
-# Script collection for ams AG process reliability team.
-# Allow to display and process electromigration data.
-# Extraction of Black's parameters is performed.
-# September 2015
-# Emmanuel Chery
-# Version 0.6
-
-
-CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormal")
-# Creation of the dataframe assembling the TTF, the status of the samples,
-# the probability, the condition (stickers for charts),
-# the stress condition and the temperature used durng the stress.
-# The probability is calculated according to Lognormal or Weibull distribution.
-# Data are given clean.
-
-# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
-{
-    rk <- Ranking(TTF) # Fraction estimator calculation
-    if (Scale=="Weibull") {
-        Proba <- CalculProbability(rk,Scale="Weibull") # Probability calculation Weibull
-    } else {
-        Proba <- CalculProbability(rk,Scale="Lognormal") # Probability calculation Lognormal
-    }
-    # Generation of the final data frame
-    DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature)
-    return(DataTable)
-}
+################################################################################
+###                                                                          ###
+###    INFORMATIONS                                                          ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       PACKAGE NAME        amsReliability                                 ###
+###       SECTION NAME        electromigration.r                             ###
+###       VERSION             0.7                                            ###
+###                                                                          ###
+###       AUTHOR              Emmanuel Chery                                 ###
+###       MAIL                emmanuel.chery@ams.com                         ###
+###       DATE                2015/10/30                                     ###
+###       PLATFORM            Windows 7 & Gnu/Linux 3.16                     ###
+###       R VERSION           R 3.1.1                                        ###
+###       REQUIRED PACKAGES   ggplot2, grid, MASS, nlstools, scales          ###
+###       LICENSE             GNU GENERAL PUBLIC LICENSE                     ###
+###                           Version 3, 29 June 2007                        ###
+###                                                                          ###
+###                                                                          ###
+###    DESCRIPTION                                                           ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       This package is a collection of scripts dedicated to help          ###
+###    the process reliability team of ams AG. It includes tools to          ###
+###    quickly visualize data and extract model parameters in order          ###
+###    to predict device lifetimes.                                          ###
+###                                                                          ###
+###       This section is dedicated to electromigration experiments.         ###
+###    Extraction of Black's parameters is performed.                        ###
+###                                                                          ###
+###                                                                          ###
+###    FUNCTIONS                                                             ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       ReadDataAce               Read Exportfile and create data table    ###
+###       BlackModelization         Extraction of Black's parameters         ###
+###       BlackAnalysis             Main function for data analysis          ###
+###                                                                          ###
+################################################################################
 
 
 ReadDataAce <- function(ListFileName, Scale="Lognormal")
@@ -171,37 +183,6 @@ BlackModelization <- function(DataTable, DeviceID)
 }
 
 
-ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
-# Generation of confidence intervals
-{
-    # list of conditions
-    ListConditions <- levels(ExpDataTable$Conditions)
-    # DataFrame initialisation
-    ConfidenceDataTable <- data.frame()
-
-    if (length(ListConditions) != 0){
-
-          for (i in seq_along(ListConditions)){
-
-              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i]])
-              if (NbData > 30) {
-                  mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-              } else {
-                  mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-              }
-              CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-              sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-              LowerLimit <- qnorm(CDF - sef * mZP_Value)
-              HigherLimit <- qnorm(CDF + sef * mZP_Value)
-
-              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
-                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
-        }
-    }
-    return(ConfidenceDataTable)
-}
-
-
 #' Electromigration data analysis
 #'
 #' Extract Black's parameters from a set of electromigration experiments.
@@ -249,16 +230,4 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
           print("You need to create the export files first!")
     }
     #return(DataTable)
-}
-
-
-ViewData.EM <- function(ListFiles)
-# Display of electromigration data without modelizing them
-{
-    DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
-
-    # Import the file(s)
-    DataTable <- ReadDataAce(ListFiles,Scale="Lognormal")
-    # Plot the data without modelizing and without confidence Intervals
-    CreateGraph(DataTable,DataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
 }
