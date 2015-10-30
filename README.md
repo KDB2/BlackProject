@@ -20,9 +20,9 @@
 - [fixed] Store the model param and fit result in a file.
 - [fixed] Store all the data in the same file?
 - [fixed] Create a function to display the data without modelizing (avoid error when only 1 or 2 conditions are available)
-- Replace above function by the use of "try" function.
-- Adapt BlackAnalysis to detect if several structures have been mixed and plot all the chart accordingly
-- adapt ViewData to detect if TDDB or EM data are given.
+- [fixed] Replace above function by the use of "try" function.
+- [fixed] Adapt BlackAnalysis to detect if several structures have been mixed and plot all the chart accordingly
+- [canceled] adapt ViewData to detect if TDDB or EM data are given.
 - Robust modelisation: fit 1 followed by a study on outliners leading to a second fit.
 - Let's check hierachical models to check if they can be useful for self heating interference.
 - Create a function that estimate the lifetime of the device. par: Scale, Ea, n, A, DeviceID, ConditionTable. Make it stand alone if user want to use it to check something. And add a call in BlackModelization (optional parameter).
