@@ -6,11 +6,11 @@
 - NBTI exportfile to script.
 
 ## Model:
-- Robust modelisation: fit 1 followed by a study on outliners leading to a second fit.
+- Robust modelisation: fit 1 followed by a study on outliners leading to a second fit (Cook's distance).
 - Let's check hierachical models to check if they can be useful for self heating interference.
 - Create a function that estimate the lifetime of the device. par: Scale, Ea, n, A, DeviceID, ConditionTable. Make it stand alone if user want to use it to check something. And add a call in BlackModelization (optional parameter).
 - Force fit option: avoid fitting again if the parameters are available
-- Start development for TDDB
+- Start development for TDDB (exportfiles are in excel format?)
 
 ## Chart:
 - Enhance legend presentation to include:
