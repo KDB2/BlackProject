@@ -6,7 +6,8 @@
 - NBTI exportfile to script.
 
 ## Model:
-- Handle case where W, H and S are not available for the modelization (i.e. file not found).  
+- Handle case where W, H and S are not available for the modelization (i.e. file not found).
+- When modelization is not possible, use fitdistrplus to return parameters of the distro and to generate a model.
 - Robust modelisation: fit 1 followed by a study on outliners leading to a second fit (Cook's distance).
 - Let's check hierachical models to check if they can be useful for self heating interference.
 - Create a function that estimate the lifetime of the device. par: Scale, Ea, n, A, DeviceID, ConditionTable. Make it stand alone if user want to use it to check something. And add a call in BlackModelization (optional parameter).
