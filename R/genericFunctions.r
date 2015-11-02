@@ -230,6 +230,56 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 }
 
 
+FitDistribution <- function(DataTable,Scale="Lognormal")
+# Extract simple distribution parameters (MTTF, scale) and return
+# a ModelDataTable to plot the theoretical distribution
+{
+    # For each condtion we estimate a theoretical distribution
+    ListConditions <- levels(DataTable$Conditions)
+
+    # Initialisation of ModelDataTable
+    ModelDataTable <- data.frame()
+
+    for (i in seq_along(ListConditions)){
+
+        # Condition, Stress and Temperature stickers
+        ModelCondition <- ListConditions[i]
+        ModelStress <- DataTable$Stress[DataTable$Conditions==ModelCondition][1]
+        ModelTemperature <- DataTable$Temperature[DataTable$Conditions==ModelCondition][1]
+
+        # x axis limits are calculated
+        lim <- range(DataTable$TTF[DataTable$Conditions==ModelCondition])
+        lim.high <- 10^(ceiling(log(lim[2],10)))
+        lim.low <- 10^(floor(log(lim[1],10)))
+        # Generation of a vector for the calculation of the model. 200pts/decades
+        x <- 10^seq(log(lim.low,10),log(lim.high,10),0.005)
+
+
+        # Model calculation with the experimental TTF
+        if (Scale=="Weibull") { # Weibull
+              fit <- fitdistr(DataTable$TTF[DataTable$Conditions==ModelCondition & DataTable$Status==1],"weibull")
+              Shape <- fit$estimate[1]  # Beta
+              Scale <- fit$estimate[2]  # Characteristic time (t_63%)
+              y <- CalculProbability(pweibull(x, Shape, Scale),"Weibull")
+              # Display of Model parameters
+              print(paste("Condition ",ModelCondition, " Beta= ", Shape, " t63%=", exp(Scale),sep=""))
+
+        } else { # Lognormale
+              fit <- fitdistr(DataTable$TTF[DataTable$Conditions==ModelCondition & DataTable$Status==1],"lognormal")
+              Scale <- fit$estimate[1]  # meanlog
+              Shape <- fit$estimate[2]  # sdlog
+              y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
+              # Display of Model parameters
+              print(paste("Condition ",ModelCondition, " Shape= ", Shape, " MTTF=", exp(Scale),sep=""))
+        }
+
+        # ModelDataTable creation
+        ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Stress'=ModelStress,'Temperature'=ModelTemperature) )
+    }
+    return(ModelDataTable)
+
+}
+
 Ranking <- function(TTF)
 # Fraction estimator calculation
 # rk(i)=(i-0.3)/(n+0.4)

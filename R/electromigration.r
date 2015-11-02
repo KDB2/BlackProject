@@ -229,8 +229,9 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
                     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Lognormal",ErrorBand,Save)
-              } else {
-                    CreateGraph(DataTable,DataTable,DataTable,DeviceID[i],Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+              } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
+                    ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
+                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID[i],Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
               }
           }
 
