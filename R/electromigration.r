@@ -81,6 +81,7 @@ ReadDataAce <- function(ListFileName, Scale="Lognormal")
     # Initialisation
     ExpDataTable <- data.frame()
 
+    # For each condition found, we calculate the probability of failure. Data are sstacked in ExpDataFrame.
     for (i in seq_along(CondList)){
         if (Scale=="Weibull") {
           TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
@@ -107,78 +108,85 @@ BlackModelization <- function(DataTable, DeviceID)
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature)
 {
     # Read the list of device to retrieve the section parameters.
-    ListDevice <- read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt")
-    W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
-    H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
-    S <- W*H*1E-12 # m^2
+    ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
+    #if file is not present, error is returned.
+    if (class(ListDevice) == "try-error"){
+        print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
+        return(ListDevice)
+    } else {
 
-    # if S is a positive number different from 0, we can proceed:
-    if (is.na(S) || S<=0 ) {
-        print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
-        return(DataTable)
-    } else { # we proceed
+        W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+        H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
+        S <- W*H*1E-12 # m^2
 
-      # Physical constants
-      k <- 1.38E-23 # Boltzmann
-      e <- 1.6E-19 # electron charge
+        # if S is a positive number different from 0, we can proceed:
+        if (is.na(S) || S<=0 ) {
+            print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
+            return(DataTable)
+        } else { # we proceed
 
-      # Remove the units where status is 0
-      CleanDataTable <- DataTable[DataTable$Status==1,]
+          # Physical constants
+          k <- 1.38E-23 # Boltzmann
+          e <- 1.6E-19 # electron charge
 
-      # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-      Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), CleanDataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
-      #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
-      # Parameters Extraction
-      A <- coef(Model)[1]
-      n <- coef(Model)[2]
-      Ea <-coef(Model)[3]
-      Scale <- coef(Model)[4]
-      # Residual Sum of Squares
-      RSS <- sum(resid(Model)^2)
-      # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
-      TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
-      Rsq <- 1-RSS/TSS # R-squared measure
-      #print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
+          # Remove the units where status is 0
+          CleanDataTable <- DataTable[DataTable$Status==1,]
 
-      # Using the parameters and the conditions, theoretical distributions are created
-      ListConditions <- levels(CleanDataTable$Conditions)
+          # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
+          Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), CleanDataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+          #Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
+          # Parameters Extraction
+          A <- coef(Model)[1]
+          n <- coef(Model)[2]
+          Ea <-coef(Model)[3]
+          Scale <- coef(Model)[4]
+          # Residual Sum of Squares
+          RSS <- sum(resid(Model)^2)
+          # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
+          TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
+          Rsq <- 1-RSS/TSS # R-squared measure
+          #print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
 
-      # Initialisation
-      ModelDataTable <- data.frame()
-      # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-      Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
+          # Using the parameters and the conditions, theoretical distributions are created
+          ListConditions <- levels(CleanDataTable$Conditions)
 
-      for (i in seq_along(ListConditions)){
-          # Experimental conditions:
-          Condition <- ListConditions[i]
-          I <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
-          Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
+          # Initialisation
+          ModelDataTable <- data.frame()
+          # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
+          Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
 
-          # TTF calculation
-          TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
+          for (i in seq_along(ListConditions)){
+              # Experimental conditions:
+              Condition <- ListConditions[i]
+              I <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
+              Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
 
-          # Dataframe creation
-          ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp))
-      }
+              # TTF calculation
+              TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
 
-      # Drawing of the residual plots
-      plot(nlsResiduals(Model))
-      # Display of fit results
-      print(DeviceID)
-      print(summary(Model))
-      print(paste("Residual squared sum: ",RSS,sep=""))
-      #print(coef(Model))
-      #print(sd(resid(Model)))
+              # Dataframe creation
+              ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp))
+          }
 
-      # Save in a file
-      capture.output(summary(Model),file="fit.txt")
-      cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
-      cat(RSS,file="fit.txt",append=TRUE)
-      cat("\n \n",file="fit.txt",append=TRUE)
-      cat("Experimental Data:",file="fit.txt",append=TRUE)
-      cat("\n",file="fit.txt",append=TRUE)
-      capture.output(DataTable,file="fit.txt",append=TRUE)
-      return(ModelDataTable)
+          # Drawing of the residual plots
+          plot(nlsResiduals(Model))
+          # Display of fit results
+          print(DeviceID)
+          print(summary(Model))
+          print(paste("Residual squared sum: ",RSS,sep=""))
+          #print(coef(Model))
+          #print(sd(resid(Model)))
+
+          # Save in a file
+          capture.output(summary(Model),file="fit.txt")
+          cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+          cat(RSS,file="fit.txt",append=TRUE)
+          cat("\n \n",file="fit.txt",append=TRUE)
+          cat("Experimental Data:",file="fit.txt",append=TRUE)
+          cat("\n",file="fit.txt",append=TRUE)
+          capture.output(DataTable,file="fit.txt",append=TRUE)
+          return(ModelDataTable)
+        }
     }
 }
 
