@@ -60,15 +60,16 @@ ReadDataAce <- function(ListFileName, Scale="Lognormal")
         Stress <- TempTable[,5]
         Temperature <- TempTable[,8]
         Condition <- paste(TempTable[,5],"mA/",TempTable[,8],"C",sep="") #paste(TempTable[,"Istress"],"mA/",TempTable[,"Temp"],"°C",sep="")
+        Dimension <- TempTable[,6]
         # Creation of a dataframe to store the data
-        TempDataFrame <- data.frame(TTF,Status,Condition,Stress,Temperature)
+        TempDataFrame <- data.frame(TTF,Status,Condition,Stress,Temperature,Dimension)
         # Force the column names
-        names(TempDataFrame) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
+        names(TempDataFrame) <- c("TTF", "Status", "Conditions", "Stress", "Temperature","Dimension")
         # Store the data in the final table
         ResTable <- rbind(ResTable,TempDataFrame)
     }
     # security check, we force again the name on ResTable
-    names(ResTable) <- c("TTF", "Status", "Conditions", "Stress", "Temperature")
+    names(ResTable) <- c("TTF", "Status", "Conditions", "Stress", "Temperature", "Dimension")
 
     # Cleaning to remove units where status is not 1 or 0.
     ResTable <- Clean(ResTable)
@@ -85,16 +86,16 @@ ReadDataAce <- function(ListFileName, Scale="Lognormal")
     for (i in seq_along(CondList)){
         if (Scale=="Weibull") {
           TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull")
+            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull",ResTable$Dimension[ResTable$Conditions==CondList[i]])
         } else {
           TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal")
+            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==CondList[i]])
         }
         ExpDataTable <- rbind(ExpDataTable,TempDataTable)
     }
 
     # We force the new names here as a security check.
-    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature")
+    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Dimension")
     return(ExpDataTable)
 }
 
@@ -105,7 +106,7 @@ BlackModelization <- function(DataTable, DeviceID)
 # as well as the lognormal slope
 # TTF = A j^(-n) exp(Ea/kT + Scale * Proba)
 # Proba in standard deviations
-# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
 {
     # Read the list of device to retrieve the section parameters.
     ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)

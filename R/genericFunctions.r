@@ -77,13 +77,13 @@ Clean <- function(DataTable)
 }
 
 
-CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormal")
+CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="Lognormal", Dimension = 1)
 # Creation of the dataframe assembling the TTF, the status of the samples,
 # the probability, the condition (stickers for charts),
 # the stress condition and the temperature used durng the stress.
 # The probability is calculated according to Lognormal or Weibull distribution.
 # Data are given clean.
-# Data(TTF,Status,Probability,Conditions,Stress,Temperature)
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
 {
     rk <- Ranking(TTF) # Fraction estimator calculation
     if (Scale=="Weibull") {
@@ -92,7 +92,7 @@ CreateDataFrame <- function(TTF, Status, Condition, Stress, Temperature, Scale="
         Proba <- CalculProbability(rk,Scale="Lognormal") # Probability calculation Lognormal
     }
     # Generation of the final data frame
-    DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature)
+    DataTable <- data.frame('TTF'=TTF,'Status'=Status,'Probability'=Proba,'Conditions'=Condition, 'Stress'=Stress, 'Temperature'=Temperature, 'Dimension'=Dimension)
     return(DataTable)
 }
 
