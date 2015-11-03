@@ -39,7 +39,7 @@
 ################################################################################
 
 
-ReadDataAce <- function(ListFileName, Scale="Lognormal")
+ReadDataAce <- function(ListFileName)
 # Read the exportfiles listed in ListFileName and store them in a dataframe.
 # First read all the files and then calculate the probability scale
 # for each condition. This allows to work with conditions splitted in different files.
@@ -84,13 +84,10 @@ ReadDataAce <- function(ListFileName, Scale="Lognormal")
 
     # For each condition found, we calculate the probability of failure. Data are sstacked in ExpDataFrame.
     for (i in seq_along(CondList)){
-        if (Scale=="Weibull") {
-          TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Weibull",ResTable$Dimension[ResTable$Conditions==CondList[i]])
-        } else {
-          TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-            ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==CondList[i]])
-        }
+
+        TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
+          ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==CondList[i]])
+
         ExpDataTable <- rbind(ExpDataTable,TempDataTable)
     }
 
@@ -223,7 +220,7 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
           for (i in seq_along(DeviceID)){
               SubListFiles <- ListFiles[grep(DeviceID[i],ListFiles)]
               # Import the file(s) and create the 3 dataframes + display data
-              DataTable <- ReadDataAce(SubListFiles,Scale="Lognormal")
+              DataTable <- ReadDataAce(SubListFiles)
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
               ModelDataTable <- try(BlackModelization(DataTable, DeviceID[i]),silent=TRUE)
               # Check if the modelization is a succes
