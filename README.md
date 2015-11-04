@@ -15,6 +15,7 @@
 - Create a function that estimate the lifetime of the device. par: Scale, Ea, n, A, DeviceID, ConditionTable. Make it stand alone if user want to use it to check something. And add a call in BlackModelization (optional parameter). Could be used to estimate quickly time for a new experiment.
 - Force fit option: avoid fitting again if the parameters are available
 - Start development for TDDB (exportfiles are in excel format?)
+- Condtion values for TDDB experiments: Voltage/temp. If several area are mixed, add area at the end. (create dataframe, search levels dimension. If lenght(levels)>1, paste old name+area)
 
 ## Chart:
 - Enhance legend presentation to include:
