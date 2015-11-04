@@ -38,6 +38,10 @@
 
 
 ReadDataTDDB <- function(ListFiles)
+# Read the exportfiles listed in ListFile and store them in a dataframe.
+# First read all the files and then calculate the probability scale
+# for each condition. This allows to work with conditions splitted in different files.
+# Data are cleaned to remove bad units
 {
 
     # ResTable initialisation
@@ -102,4 +106,68 @@ ReadDataTDDB <- function(ListFiles)
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Dimension")
     return(ExpDataTable)
 
+}
+
+
+OxideLifetimeModelization <- function(DataTable,DeviceID)
+# Modelize the data using a TDDB lifetime model
+# Extract the parameters: t0, A and Ea
+# as well as the Weibull slope
+# TTF =
+#
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
+{
+
+}
+
+
+#' Oxide breakdown data analysis
+#'
+#' Extract oxide lifetime parameters from a set of Time Dependant Dielectric
+#' Breakdown (TDDB) experiments.
+#' The experimental data as well as the resulting model are displayed and
+#' can be saved. Extracted parameters are saved in a fit.txt file.
+#'
+#' @param ErrorBand displays the confidence intervals if set to TRUE.
+#' @param ConfidenceValue percentage used in the confidence interval calculation
+#' @param Save saves the chart as .png if set to TRUE.
+#'
+#' @return None
+#'
+#' @examples
+#' OxideTDDB()
+#' OxideTDDB(ErrorBand=FALSE)
+#' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
+#' @import ggplot2 MASS scales grid nlstools
+#' @export
+OxideTDDB <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
+{
+    #rm(list=ls())
+    ListFiles <- list.files(pattern="k_T.*txt$")
+    #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
+    # case 1, there are one or several files available
+    if (length(ListFiles) != 0){
+          # List of DeviceID available in the selected exportfiles
+          DeviceID <- levels(sapply(ListFiles,function(x){factor(strsplit(x,split="_")[[1]][1])}))
+
+          for (i in seq_along(DeviceID)){
+              SubListFiles <- ListFiles[grep(DeviceID[i],ListFiles)]
+              # Import the file(s) and create the 3 dataframes + display data
+              DataTable <- ReadDataTDDB(SubListFiles)
+              # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
+              #ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID[i]),silent=TRUE)
+              # Check if the modelization is a succes
+              #if (class(ModelDataTable) != "try-error"){
+              #      ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+              #      CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Weibull",ErrorBand,Save)
+              #} else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
+                    ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
+                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID[i],Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
+              #}
+          }
+
+    } else { # case 2, there are no files available
+          print("You need to create the export files first!")
+    }
+    #return(DataTable)
 }
