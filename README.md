@@ -16,6 +16,7 @@
 - Force fit option: avoid fitting again if the parameters are available
 - Start development for TDDB (exportfiles are in excel format?)
 - Condtion values for TDDB experiments: Voltage/temp. If several area are mixed, add area at the end. (create dataframe, search levels dimension. If lenght(levels)>1, paste old name+area)
+- Rethink BlackAnalysis to use the DeviceID stored in the exportfile and not the one from the title? Or we assume it's the same since the script generated the file?
 
 ## Chart:
 - Enhance legend presentation to include:
