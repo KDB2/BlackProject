@@ -82,7 +82,7 @@ ReadDataAce <- function(ListFileName)
     # Initialisation
     ExpDataTable <- data.frame()
 
-    # For each condition found, we calculate the probability of failure. Data are sstacked in ExpDataFrame.
+    # For each condition found, we calculate the probability of failure. Data are stacked in ExpDataFrame. Lognormal scale is used.
     for (i in seq_along(CondList)){
 
         TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
