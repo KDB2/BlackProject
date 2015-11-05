@@ -120,7 +120,10 @@ BlackModelization <- function(DataTable, DeviceID)
         # if S is a positive number different from 0, we can proceed:
         if (is.na(S) || S<=0 ) {
             print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
-            return(DataTable)
+            # Force an error in the return for BlackAnalysis.
+            ModelDataTable <- data.frame()
+            as(ModelDataTable,"try-error")
+            return(ModelDataTable)
         } else { # we proceed
 
           # Physical constants
