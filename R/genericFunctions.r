@@ -258,19 +258,19 @@ FitDistribution <- function(DataTable,Scale="Lognormal")
         # Model calculation with the experimental TTF
         if (Scale=="Weibull") { # Weibull
               fit <- fitdistr(DataTable$TTF[DataTable$Conditions==ModelCondition & DataTable$Status==1],"weibull")
-              Shape <- fit$estimate[1]  # Beta
-              Scale <- fit$estimate[2]  # Characteristic time (t_63%)
-              y <- CalculProbability(pweibull(x, Shape, Scale),"Weibull")
+              fitShape <- fit$estimate[1]  # Beta
+              fitScale <- fit$estimate[2]  # Characteristic time (t_63%)
+              y <- CalculProbability(pweibull(x, fitShape, fitScale),"Weibull")
               # Display of Model parameters
-              print(paste("Condition ",ModelCondition, " Beta= ", Shape, " t63%=", exp(Scale),sep=""))
+              print(paste("Condition ",ModelCondition, " Beta= ", fitShape, " t63%=", fitScale,sep=""))
 
         } else { # Lognormale
               fit <- fitdistr(DataTable$TTF[DataTable$Conditions==ModelCondition & DataTable$Status==1],"lognormal")
-              Scale <- fit$estimate[1]  # meanlog
-              Shape <- fit$estimate[2]  # sdlog
-              y <- CalculProbability(plnorm(x, Scale, Shape),"Lognormale")
+              fitScale <- fit$estimate[1]  # meanlog
+              fitShape <- fit$estimate[2]  # sdlog
+              y <- CalculProbability(plnorm(x, fitScale, fitShape),"Lognormale")
               # Display of Model parameters
-              print(paste("Condition ",ModelCondition, " Shape= ", Shape, " MTTF=", exp(Scale),sep=""))
+              print(paste("Condition ",ModelCondition, " Shape= ", fitShape, " MTTF=", exp(fitScale),sep=""))
         }
 
         # ModelDataTable creation
