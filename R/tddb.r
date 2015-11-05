@@ -142,6 +142,9 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
 #' @export
 OxideTDDB <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
 {
+    # Disable warning for this function.
+    oldw <- getOption("warn")
+    options(warn = -1)
     #rm(list=ls())
     ListFiles <- list.files(pattern="k_T.*txt$")
     #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
@@ -170,4 +173,6 @@ OxideTDDB <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
           print("You need to create the export files first!")
     }
     #return(DataTable)
+    # Warning are set on again.
+    options(warn = oldw)
 }

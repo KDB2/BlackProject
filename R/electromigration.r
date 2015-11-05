@@ -212,6 +212,9 @@ BlackModelization <- function(DataTable, DeviceID)
 #' @export
 BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
 {
+    # Disable warning for this function.
+    oldw <- getOption("warn")
+    options(warn = -1)
     #rm(list=ls())
     ListFiles <- list.files(pattern="*exportfile.txt")
     #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
@@ -240,4 +243,6 @@ BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
           print("You need to create the export files first!")
     }
     #return(DataTable)
+    # Warning are set on again.
+    options(warn = oldw)
 }
