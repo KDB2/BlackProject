@@ -78,8 +78,8 @@ ReadDataTDDB <- function(ListFiles)
 
     # Now that all the files have been opened, let's check if different sizes were used.
     # If yes, we will change the Condition sticker to include the area.
-    if (length(levels(factor(Dimension))) > 1 ){
-        ResTable$Condition <- paste(ResTable$Condition,"/",ResTable$Dimension /1000, "k" , sep="")
+    if (length(levels(factor(ResTable$Dimension))) > 1 ){
+        ResTable$Conditions <- paste(ResTable$Conditions,"/",ResTable$Dimension /1000, "k" , sep="")
     }
 
     # Cleaning to remove units where status is not 1 or 0.
