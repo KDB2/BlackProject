@@ -4,7 +4,7 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
-###       SECTION NAME        electromigration.r                             ###
+###       MODULE NAME        electromigration.r                              ###
 ###       VERSION             0.7                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
@@ -25,7 +25,7 @@
 ###    quickly visualize data and extract model parameters in order          ###
 ###    to predict device lifetimes.                                          ###
 ###                                                                          ###
-###       This section is dedicated to electromigration experiments.         ###
+###       This module is dedicated to electromigration experiments.          ###
 ###    Extraction of Black's parameters is performed.                        ###
 ###                                                                          ###
 ###                                                                          ###

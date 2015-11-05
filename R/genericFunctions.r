@@ -4,7 +4,7 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
-###       SECTION NAME        genericFunctions.r                             ###
+###       MODULE NAME        genericFunctions.r                              ###
 ###       VERSION             0.7                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
@@ -25,7 +25,7 @@
 ###    quickly visualize data and extract model parameters in order          ###
 ###    to predict device lifetimes.                                          ###
 ###                                                                          ###
-###       This section includes generic functions usable with every          ###
+###       This module includes generic functions usable with every           ###
 ###    degradation mechanism.                                                ###
 ###                                                                          ###
 ###                                                                          ###

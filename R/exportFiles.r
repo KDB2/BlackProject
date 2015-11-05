@@ -4,7 +4,7 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
-###       SECTION NAME        exportFiles.r                                  ###
+###       MODULE NAME        exportFiles.r                                   ###
 ###       VERSION             0.7                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
@@ -25,7 +25,7 @@
 ###    quickly visualize data and extract model parameters in order          ###
 ###    to predict device lifetimes.                                          ###
 ###                                                                          ###
-###       This section includes functions used to automatize export          ###
+###       This module includes functions used to automatize export           ###
 ###    files creation.                                                       ###
 ###                                                                          ###
 ###                                                                          ###

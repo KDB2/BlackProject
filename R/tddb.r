@@ -4,7 +4,7 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
-###       SECTION NAME        tddb.r                                         ###
+###       MODULE NAME        tddb.r                                          ###
 ###       VERSION             0.7                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
@@ -25,7 +25,7 @@
 ###    quickly visualize data and extract model parameters in order          ###
 ###    to predict device lifetimes.                                          ###
 ###                                                                          ###
-###       This section is dedicated to tddb experiments.                     ###
+###       This module is dedicated to tddb experiments.                      ###
 ###    Extraction of model parameters is performed.                          ###
 ###                                                                          ###
 ###                                                                          ###
