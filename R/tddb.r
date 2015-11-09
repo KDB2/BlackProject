@@ -118,6 +118,69 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
 {
 
+    Area <- DataTable$Dimension * 1E-12 # m^2
+
+    # Physical constants
+    k <- 1.38E-23 # Boltzmann
+    e <- 1.6E-19 # electron charge
+
+    # Remove the units where status is 0
+    CleanDataTable <- DataTable[DataTable$Status==1,]
+
+    # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
+    Model <- nls(log10(TTF) ~ log10(exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(1/beta)*exp(Probability/beta)), CleanDataTable, start=list(t0=30,g=1,Ea=0.2,beta=1),control= list(maxiter = 50, tol = 1e-6))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+    # Parameters Extraction
+    t0 <- coef(Model)[1]
+    g <- coef(Model)[2]
+    Ea <-coef(Model)[3]
+    beta <- coef(Model)[4]
+    # Residual Sum of Squares
+    RSS <- sum(resid(Model)^2)
+    # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
+    TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
+    Rsq <- 1-RSS/TSS # R-squared measure
+
+    # Using the parameters and the conditions, theoretical distributions are created
+    ListConditions <- levels(CleanDataTable$Conditions)
+
+    # Initialisation
+    ModelDataTable <- data.frame()
+    # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
+    Proba <-  seq(log(-log(1-0.001)),log(-log(1-0.9999)),0.05) # Weibit
+
+    for (i in seq_along(ListConditions)){
+        # Experimental conditions:
+        Condition <- ListConditions[i]
+        V <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
+        Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
+        Area <- CleanDataTable$Dimension[CleanDataTable$Conditions==Condition][1] * 1E-12 # m^2
+
+        # TTF calculation
+        TTF <- exp(t0)*exp(-g*V)*exp((Ea*e)/(k*(Temp+273.15)))*Area^(1/beta)*exp(Proba/beta)
+
+        # Dataframe creation
+        ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=V,'Temperature'=Temp))
+    }
+
+    # Drawing of the residual plots
+    plot(nlsResiduals(Model))
+    # Display of fit results
+    print(DeviceID)
+    print(summary(Model))
+    print(paste("Residual squared sum: ",RSS,sep=""))
+    #print(coef(Model))
+    #print(sd(resid(Model)))
+
+    # Save in a file
+    capture.output(summary(Model),file="fit.txt")
+    cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+    cat(RSS,file="fit.txt",append=TRUE)
+    cat("\n \n",file="fit.txt",append=TRUE)
+    cat("Experimental Data:",file="fit.txt",append=TRUE)
+    cat("\n",file="fit.txt",append=TRUE)
+    capture.output(DataTable,file="fit.txt",append=TRUE)
+    return(ModelDataTable)
+
 }
 
 
@@ -158,15 +221,15 @@ OxideTDDB <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataTDDB(SubListFiles)
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              #ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID[i]),silent=TRUE)
+              ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID[i]),silent=TRUE)
               # Check if the modelization is a succes
-              #if (class(ModelDataTable) != "try-error"){
-              #      ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-              #      CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Weibull",ErrorBand,Save)
-              #} else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
+              if (class(ModelDataTable) != "try-error"){
+                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Weibull",ErrorBand,Save)
+              } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
                     CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID[i],Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
-              #}
+              }
           }
 
     } else { # case 2, there are no files available
