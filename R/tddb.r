@@ -4,7 +4,7 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
-###       MODULE NAME        tddb.r                                          ###
+###       MODULE NAME         tddb.r                                         ###
 ###       VERSION             0.7                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
