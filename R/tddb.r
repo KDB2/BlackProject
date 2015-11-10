@@ -128,7 +128,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
     CleanDataTable <- DataTable[DataTable$Status==1,]
 
     # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-    Model <- nls(log10(TTF) ~ log10(exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(1/beta)*exp(Probability/beta)), CleanDataTable, start=list(t0=30,g=1,Ea=0.2,beta=1),control= list(maxiter = 50, tol = 1e-6))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+    Model <- nls(log10(TTF) ~ log10(exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(-1/beta)*exp(Probability/beta)), CleanDataTable, start=list(t0=30,g=1,Ea=0.2,beta=1),control= list(maxiter = 50, tol = 1e-6))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
     # Parameters Extraction
     t0 <- coef(Model)[1]
     g <- coef(Model)[2]
@@ -156,7 +156,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
         Area <- CleanDataTable$Dimension[CleanDataTable$Conditions==Condition][1] * 1E-12 # m^2
 
         # TTF calculation
-        TTF <- exp(t0)*exp(-g*V)*exp((Ea*e)/(k*(Temp+273.15)))*Area^(1/beta)*exp(Proba/beta)
+        TTF <- exp(t0)*exp(-g*V)*exp((Ea*e)/(k*(Temp+273.15)))*Area^(-1/beta)*exp(Proba/beta)
 
         # Dataframe creation
         ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=V,'Temperature'=Temp))
