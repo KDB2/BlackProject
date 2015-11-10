@@ -203,7 +203,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
 #' @import ggplot2 MASS scales grid nlstools
 #' @export
-OxideTDDB <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
+OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
 {
     # Disable warning for this function.
     oldw <- getOption("warn")

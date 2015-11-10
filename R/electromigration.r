@@ -210,7 +210,7 @@ BlackModelization <- function(DataTable, DeviceID)
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
 #' @import ggplot2 MASS scales grid nlstools
 #' @export
-BlackAnalysis <- function(ErrorBand=TRUE, ConfidenceValue=0.95, Save=TRUE)
+BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
 {
     # Disable warning for this function.
     oldw <- getOption("warn")
