@@ -32,6 +32,8 @@
 ###    FUNCTIONS                                                             ###
 ###    ---------------------------------                                     ###
 ###                                                                          ###
+###       OxideLifetimeModelization Extraction of oxide lifetime parameters  ###
+###       OxideTDDB                 Main function for TDDB data analysis     ###
 ###       ReadDataTDDB              Read Exportfile and create data table    ###
 ###                                                                          ###
 ################################################################################
