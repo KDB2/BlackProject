@@ -5,11 +5,11 @@
 ###                                                                          ###
 ###       PACKAGE NAME        amsReliability                                 ###
 ###       MODULE NAME         genericFunctions.r                             ###
-###       VERSION             0.7                                            ###
+###       VERSION             0.8                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
 ###       MAIL                emmanuel.chery@ams.com                         ###
-###       DATE                2015/10/30                                     ###
+###       DATE                2015/11/10                                     ###
 ###       PLATFORM            Windows 7 & Gnu/Linux 3.16                     ###
 ###       R VERSION           R 3.1.1                                        ###
 ###       REQUIRED PACKAGES   ggplot2, grid, MASS, nlstools, scales          ###
