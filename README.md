@@ -17,9 +17,10 @@
 - [fixed] Start development for TDDB (exportfiles are in excel format?)
 - [fixed] Condition values for TDDB experiments: Voltage/temp. If several area are mixed, add area at the end. (create dataframe, search levels dimension. If lenght(levels)>1, paste old name+area)
 - Rethink BlackAnalysis to use the DeviceID stored in the exportfile and not the one from the title? Or we assume it's the same since the script generated the file?
-- Error function is not providing full error bands. 
+- Error function is not providing full error bands.
 - Test TDDB modelization when several area are provided.
-- Compare datacruncher results with amsRel for TDDB. 
+- Compare datacruncher results with amsRel for TDDB.
+- TDDB is Negative if breakdown too fast. Take care of this.
 
 
 ## Chart:
