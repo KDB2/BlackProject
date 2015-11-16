@@ -61,6 +61,12 @@ ReadDataAce <- function(ListFileName)
         Temperature <- TempTable[,8]
         Condition <- paste(TempTable[,5],"mA/",TempTable[,8],"C",sep="") #paste(TempTable[,"Istress"],"mA/",TempTable[,"Temp"],"°C",sep="")
         Dimension <- TempTable[,6]
+
+        # Handle case where some unfailed samples have a lower TTF than finished ones.
+        while( max(TTF[Status==1]) > min(TTF[Status==0]) ){
+            TTF[TTF==min(TTF[Status==0])] <- max(TTF[Status==1]) + 1
+        }
+
         # Creation of a dataframe to store the data
         TempDataFrame <- data.frame(TTF,Status,Condition,Stress,Temperature,Dimension)
         # Force the column names
