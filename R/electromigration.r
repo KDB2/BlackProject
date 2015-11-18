@@ -59,7 +59,7 @@ ReadDataAce <- function(ListFileName)
         Status <- TempTable[,2]
         Stress <- TempTable[,5]
         Temperature <- TempTable[,8]
-        Condition <- paste(TempTable[,5],"mA/",TempTable[,8],"C",sep="") #paste(TempTable[,"Istress"],"mA/",TempTable[,"Temp"],"°C",sep="")
+        Condition <- paste(TempTable[,5],"mA/",TempTable[,8],"°C",sep="") #paste(TempTable[,"Istress"],"mA/",TempTable[,"Temp"],"°C",sep="")
         Dimension <- TempTable[,6]
 
         # Handle case where some unfailed samples have a lower TTF than finished ones.

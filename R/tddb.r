@@ -78,7 +78,7 @@ ReadDataTDDB <- function(ListFiles)
         TTF[Status==0] <- 1E30
         Stress[Status==0] <- as.numeric(substr(as.character(File[Status==0,2]), 2, nchar(as.character(File[Status==0,2]))))
         # Condition stickers
-        Conditions <- paste(Stress,"V/",Temperature,"C",sep="")
+        Conditions <- paste(Stress,"V/",Temperature,"°C",sep="")
         # Creation of a dataframe to store the data
         TempDataFrame <- data.frame(TTF,Status,Conditions,Stress,Temperature,Dimension)
         # Force the column names
