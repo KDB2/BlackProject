@@ -290,3 +290,22 @@ Ranking <- function(TTF)
     # ties.method="random" handles identical TTFs and provide a unique ID
     rk <- (rank(TTF, ties.method="random")-0.3)/(length(TTF)+0.4)
 }
+
+
+SortConditions <- function(ListConditions){
+# Sort a list of conditions to avoid 6mA being
+# bigger as 14mA
+  Temperature <- sapply(ListConditions,function(x){strsplit(x,split="mA/")[[1]][2]})
+  Temperature <- as.numeric(sapply(Temperature,function(x){substr(x,1, nchar(x)-2)}))
+  Current <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="mA/")[[1]][1]}))
+  Table <- data.frame("Stickers"=ListConditions,"Current"=Current,"Temperature"=Temperature)
+  Table <-  Table[order(Table$Temperature),]
+  ListCurrents <- levels(factor(Current))
+
+  SortedListCondition <- list()
+  for (i in seq_along(ListCurrents)){
+    SortedListCondition <-  rbind(SortedListCondition,Table$Stickers[Table$Current==ListCurrents[i]])
+
+  }
+  return(SortedListCondition)
+}
