@@ -292,20 +292,33 @@ Ranking <- function(TTF)
 }
 
 
-SortConditions <- function(ListConditions){
+SortConditions <- function(ListConditions)
 # Sort a list of conditions to avoid 6mA being
 # bigger as 14mA
-  Temperature <- sapply(ListConditions,function(x){strsplit(x,split="mA/")[[1]][2]})
+# Return a list of Conditions sorted.
+{
+  Temperature <- sapply(ListConditions,function(x){strsplit(x,split="mA/")[[1]][2]}) # voir si possible de faire une recherche cond : mA ou V
   Temperature <- as.numeric(sapply(Temperature,function(x){substr(x,1, nchar(x)-2)}))
   Current <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="mA/")[[1]][1]}))
-  Table <- data.frame("Stickers"=ListConditions,"Current"=Current,"Temperature"=Temperature)
+  Table <- data.frame("Conditions"=ListConditions,"Current"=Current,"Temperature"=Temperature)
   Table <-  Table[order(Table$Temperature),]
   ListCurrents <- levels(factor(Current))
 
-  SortedListCondition <- list()
+  SortedTable <- list()
   for (i in seq_along(ListCurrents)){
-    SortedListCondition <-  rbind(SortedListCondition,Table$Stickers[Table$Current==ListCurrents[i]])
-
+    SortedTable <-  rbind(SortedTable,Table[Table$Current==ListCurrents[i],])
   }
-  return(SortedListCondition)
+  return(as.character(SortedTable$Conditions))
+}
+
+SortConditions <- function(ListConditions)
+# Order a list of conditions to avoid 6mA being
+# bigger as 14mA.
+# Return a vector of indice.
+{
+    SortedList <- SortConditions(ListConditions)
+    # chercher fonction qui compare 2 vecteurs.
+
+
+  return()
 }

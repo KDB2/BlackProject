@@ -100,10 +100,11 @@ ReadDataAce <- function(ListFileName)
     # We force the new names here as a security check.
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Dimension")
     # Order the condition in numerical/alphabetical order
-    ExpDataTable <- ExpDataTable[order(as.character(ExpDataTable$Conditions)),]
+    #ExpDataTable <- ExpDataTable[order(as.character(ExpDataTable$Conditions)),]
+    ExpDataTable <- ExpDataTable[OrderConditions(ExpDataTable$Conditions)),]
     # Do the same for conditions levels
-    ExpDataTable$Conditions <- factor(ExpDataTable$Conditions, sort(levels(ExpDataTable$Conditions)))
-
+    #ExpDataTable$Conditions <- factor(ExpDataTable$Conditions, sort(levels(ExpDataTable$Conditions)))
+    ExpDataTable$Conditions <- factor(ExpDataTable$Conditions, SortConditions(ExpDataTable$Conditions))
     return(ExpDataTable)
 }
 
