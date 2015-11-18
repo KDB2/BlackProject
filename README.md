@@ -21,6 +21,8 @@
 - Test TDDB modelization when several area are provided.
 - Compare datacruncher results with amsRel for TDDB.
 - TDDB is Negative if breakdown too fast. Take care of this.
+- Fix situation where some unfinished units have a lower TTF than finished ones. EM.
+- Apply fix for EM and non ordered factors to TDDB
 
 
 ## Chart:
