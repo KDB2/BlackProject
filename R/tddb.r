@@ -115,6 +115,12 @@ ReadDataTDDB <- function(ListFiles)
 
     # We force the new names here as a security check.
     names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Dimension")
+    # Order the condition in numerical/alphabetical order
+    ExpDataTable <- ExpDataTable[OrderConditions(ExpDataTable),]
+    # Do the same for conditions levels
+    ExpDataTable$Conditions <- factor(ExpDataTable$Conditions, SortConditions(levels(ExpDataTable$Conditions)))
+
+
     return(ExpDataTable)
 
 }
@@ -246,7 +252,7 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     } else { # case 2, there are no files available
           print("You need to create the export files first!")
     }
-    #return(DataTable)
+    # return(DataTable)
     # Warning are set on again.
     options(warn = oldw)
 }
