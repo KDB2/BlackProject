@@ -304,21 +304,23 @@ SortConditions <- function(ListConditions)
   Table <-  Table[order(Table$Temperature),]
   ListCurrents <- levels(factor(Current))
 
-  SortedTable <- list()
+  SortedTable <- data.frame()
   for (i in seq_along(ListCurrents)){
     SortedTable <-  rbind(SortedTable,Table[Table$Current==ListCurrents[i],])
   }
   return(as.character(SortedTable$Conditions))
+  #return(SortedTable)
 }
 
-SortConditions <- function(ListConditions)
+OrderConditions <- function(DataTable)
 # Order a list of conditions to avoid 6mA being
 # bigger as 14mA.
 # Return a vector of indice.
 {
-    SortedList <- SortConditions(ListConditions)
-    # chercher fonction qui compare 2 vecteurs.
-
-
-  return()
+    SortedListConditions <- SortConditions(levels(DataTable$Conditions))
+    VecIndices <- c()
+    for (i in seq_along(SortedListConditions)){
+        VecIndices <- c(VecIndices, which(DataTable$Conditions == SortedListConditions[i]))
+    }
+    return(VecIndices)
 }
