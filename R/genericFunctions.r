@@ -109,6 +109,21 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     lim.low <- 10^(floor(log(lim[1],10)))
     # Now that we have the limits, we create the graph labels for x axis.
     GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
+    # Now we create the minor ticks
+    ind.lim.high <- log10(lim.high)
+    ind.lim.low <- log10(lim.low)
+    MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
+
+    # Function used to calculate the distance between ticks for logscale. See line 166:
+    # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    faceplant1 <- function(x) {
+        return (c(x[1]*10^.25, x[2]/10^.25))
+    }
+
+    faceplant2 <- function(x) {
+        return (MinorTicks)
+    }
+    #############################
 
     # Label for y axis
     # Dynamique labels as a function of the minimal probability observed.
@@ -149,12 +164,13 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
     # box around chart + background
     Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    # Definition of scales
+    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     # Grid definitions
     Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
-    Graph <- Graph + theme(panel.grid.minor = element_line(linetype=0, colour="white", size = 0.25))
-    # Definition of scales
-    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)))
-    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba )
+    Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
+    Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
     # Controled symbol list -- Max is 20 conditions on the chart.
     Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
     Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
