@@ -219,6 +219,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
 # Generation of confidence intervals
+# Based on Kaplan Meier estimator and Greenwood confidence intervals
 {
     # list of conditions
     ListConditions <- levels(ExpDataTable$Conditions)
@@ -236,7 +237,7 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
                   mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
               }
               CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-              sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
+              sef <- sqrt(CDF * (1 - CDF)/NbData)
               LowerLimit <- qnorm(CDF - sef * mZP_Value)
               HigherLimit <- qnorm(CDF + sef * mZP_Value)
 
@@ -338,40 +339,4 @@ OrderConditions <- function(DataTable)
         VecIndices <- c(VecIndices, which(DataTable$Conditions == SortedListConditions[i]))
     }
     return(VecIndices)
-}
-
-KM.ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
-# Generation of confidence intervals based on Kaplan Meier estimators
-# Fi +/- 1.96 * (1-Fi)*Si
-{
-    # # list of conditions
-    # ListConditions <- levels(ExpDataTable$Conditions)
-    # # DataFrame initialisation
-    # ConfidenceDataTable <- data.frame()
-    #
-    # if (length(ListConditions) != 0){
-    #
-    #       for (i in seq_along(ListConditions)){
-
-              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i] & ExpDataTable$Status == 1])
-              if (NbData > 30) {
-                  mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
-              } else {
-                  mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
-              }
-
-              Failure_Proba <- pnorm(ModelDataTable$Probability) - pnorm(c(0, ModelDataTable$Probability[1:lenght(ModelDataTable$Probability)-1]))
-              Survival_Proba <- 1 - Failure_Proba
-              Survival_Proba_Until_Interval <- 
-
-              CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-              sef <- sqrt(CDF * (1 - CDF)/NbData) # TO BE CHECKED
-              LowerLimit <- qnorm(CDF - sef * mZP_Value)
-              HigherLimit <- qnorm(CDF + sef * mZP_Value)
-
-              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
-                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
-    #     }
-    # }
-    return(ConfidenceDataTable)
 }
