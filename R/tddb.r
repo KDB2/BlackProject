@@ -149,7 +149,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
     # Parameters Extraction
     t0 <- coef(Model)[1]
     g <- coef(Model)[2]
-    Ea <-coef(Model)[3]
+    Ea <- coef(Model)[3]
     beta <- coef(Model)[4]
     # Residual Sum of Squares
     RSS <- sum(resid(Model)^2)
@@ -241,7 +241,7 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID[i]),silent=TRUE)
               # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
-                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
                     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Weibull",ErrorBand,Save)
               } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")

@@ -217,7 +217,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
-ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
+ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95, Scale="Lognormal")
 # Generation of confidence intervals
 # Based on Kaplan Meier estimator and Greenwood confidence intervals
 {
@@ -236,10 +236,19 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95)
               } else {
                   mZP_Value <- qt((1 - ConfidenceValue) / 2, df=(NbData -1) ) # t-test statistic for low sample size
               }
-              CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
-              sef <- sqrt(CDF * (1 - CDF)/NbData)
-              LowerLimit <- qnorm(CDF - sef * mZP_Value)
-              HigherLimit <- qnorm(CDF + sef * mZP_Value)
+
+              if (Scale == "Weibull"){
+                  CDF <- 1-exp(-exp(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]]))
+                  sef <- sqrt(CDF * (1 - CDF)/NbData)
+                  LowerLimit <- log(-log(1-(CDF - sef * mZP_Value)))
+                  HigherLimit <- log(-log(1-(CDF + sef * mZP_Value)))
+
+              } else {
+                  CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
+                  sef <- sqrt(CDF * (1 - CDF)/NbData)
+                  LowerLimit <- qnorm(CDF - sef * mZP_Value)
+                  HigherLimit <- qnorm(CDF + sef * mZP_Value)
+              }
 
               ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
                                                                             'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
