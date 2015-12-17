@@ -3,6 +3,7 @@
 ## Exportfiles:
 - [ ] Upgrade Mira export file creation to take into account the case where several conditions are present. (Pending for Q to act)
 - [ ] Mira: clean the table to remove bad unit before working with it. Will make code more readable.
+- [ ] Ace TCR/deg files should be robust with regard of first line (iteration=...)
 - [ ] NBTI exportfile to script.
 
 
@@ -27,7 +28,7 @@
 - [ ] Implement hierachical models (mixed effect models) to check if they can be useful for self heating interference.
 - [ ] Force fit option: avoid fitting again if the parameters are available
 - [x] Error function is not providing full error bands --> Weibull scale was not implemented correctly
-- [ ] Implement log error band according to KM estimator. 
+- [ ] Implement Kaplan-Meier and Exponential Greenwood Confidence Intervals 
 - [ ] Fix situation where some unfinished units have a lower TTF than finished ones. (typical in EM exp) --> See J.G. Stotvig report.
 - [x] When modelization is not possible, use fitdistr to return parameters of the distro and to generate a model.
 - [ ] Improve previous solution with J.G. Stotvig codes. fitdistr is failing when censored samples are provided. Take advantage of know probability.
