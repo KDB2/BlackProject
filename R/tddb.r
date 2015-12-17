@@ -163,7 +163,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
     # Initialisation
     ModelDataTable <- data.frame()
     # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-    Proba <-  seq(log(-log(1-0.001)),log(-log(1-0.9999)),0.05) # Weibit
+    Proba <-  seq(log(-log(1-0.0001)),log(-log(1-0.9999)),0.05) # Weibit
 
     for (i in seq_along(ListConditions)){
         # Experimental conditions:
