@@ -28,7 +28,7 @@
 - [ ] Implement hierachical models (mixed effect models) to check if they can be useful for self heating interference.
 - [ ] Force fit option: avoid fitting again if the parameters are available
 - [x] Error function is not providing full error bands --> Weibull scale was not implemented correctly
-- [ ] Implement Kaplan-Meier and Exponential Greenwood Confidence Intervals 
+- [ ] Implement Kaplan-Meier and Exponential Greenwood Confidence Intervals
 - [ ] Fix situation where some unfinished units have a lower TTF than finished ones. (typical in EM exp) --> See J.G. Stotvig report.
 - [x] When modelization is not possible, use fitdistr to return parameters of the distro and to generate a model.
 - [ ] Improve previous solution with J.G. Stotvig codes. fitdistr is failing when censored samples are provided. Take advantage of know probability.
@@ -38,5 +38,6 @@
 - [ ] Enhance legend presentation to include:
   - [ ] MTTF, Number of samples + number of censored samples<-- Create a table for this like in Minitab
   - [ ] Model parameters <- addressed with annotate + clipping off (2nd table)
+  - [x] Minimum 3 decades per charts
 
 ## Documentation:
