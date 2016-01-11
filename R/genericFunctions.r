@@ -107,8 +107,22 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     lim <- range(ExpDataTable$TTF[ExpDataTable$Status==1]) # Min of the values is stored in [1] and max in  [2]
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
+    # 3 decades minimum are needed for a good looking chart.
+    # In case the distribution is only in 1 decade, we add a decade at both ends
+    if ((log10(lim.high) - log10(lim.low)) == 1 ) {
+        lim.high <- lim.high * 10
+        lim.low <- lim.low / 10
+    # if we have already tw0 decades, we add one decade in the area where the data are closer to the edge 
+    } else if ((log10(lim.high) - log10(lim.low)) == 2) {
+        if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){
+            lim.low <- lim.low / 10
+        } else {
+            lim.high <- lim.high * 10
+        }
+    }
+
     # Now that we have the limits, we create the graph labels for x axis.
-    GraphLabels <- 10^(seq(floor(log(lim[1],10)),ceiling(log(lim[2],10))))
+    GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
     # Now we create the minor ticks
     ind.lim.high <- log10(lim.high)
     ind.lim.low <- log10(lim.low)
