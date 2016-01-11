@@ -180,9 +180,9 @@ BlackModelization <- function(DataTable, DeviceID)
           # Drawing of the residual plots
           plot(nlsResiduals(Model))
           # Display of fit results
-          print(DeviceID)
+          cat(DeviceID,"\n")
           print(summary(Model))
-          print(paste("Residual squared sum: ",RSS,sep=""))
+          cat(paste("Residual squared sum: ",RSS,sep=""))
           #print(coef(Model))
           #print(sd(resid(Model)))
 
