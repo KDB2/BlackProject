@@ -39,7 +39,7 @@
 ################################################################################
 
 
-ReadDataAce <- function(ListFileName)
+ReadDataAce <- function(ListFileName, StructureList=c())
 # Read the exportfiles listed in ListFileName and store them in a dataframe.
 # First read all the files and then calculate the probability scale
 # for each condition. This allows to work with conditions splitted in different files.
@@ -50,10 +50,10 @@ ReadDataAce <- function(ListFileName)
     # ResTable initialisation
     ResTable <- data.frame()
 
-    for (i in seq_along(ListFileName)){
+    for ( file in ListFileName){
 
         # Read the file and store it in a temporary dataframe
-        TempTable <- read.delim(ListFileName[i])
+        TempTable <- read.delim(file)
         # Creation of the new dataframe
         TTF <- TempTable[,3]
         Status <- TempTable[,2]
@@ -78,6 +78,15 @@ ReadDataAce <- function(ListFileName)
     # Cleaning to remove units where status is not 1 or 0.
     ResTable <- Clean(ResTable)
 
+    # If Structure is not empty, we select only the structures listed.
+    if (length(StructureList) != 0){
+        NewResTable <- data.frame()
+        for ( strucLength in StructureList){
+            NewResTable <- rbind(NewResTable,ResTable[ResTable$Dimension==strucLength,])
+        }
+        ResTable <- NewResTable
+    }
+
     # List the conditions present in ResTable
     CondList <- levels(factor(ResTable$Conditions))
 
@@ -87,10 +96,10 @@ ReadDataAce <- function(ListFileName)
     ExpDataTable <- data.frame()
 
     # For each condition found, we calculate the probability of failure. Data are stacked in ExpDataFrame. Lognormal scale is used.
-    for (i in seq_along(CondList)){
+    for ( cond in CondList){
 
-        TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==CondList[i]], ResTable$Status[ResTable$Conditions==CondList[i]],
-          ResTable$Condition[ResTable$Conditions==CondList[i]], ResTable$Stress[ResTable$Conditions==CondList[i]], ResTable$Temperature[ResTable$Conditions==CondList[i]], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==CondList[i]])
+        TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==cond], ResTable$Status[ResTable$Conditions==cond],
+          ResTable$Condition[ResTable$Conditions==cond], ResTable$Stress[ResTable$Conditions==cond], ResTable$Temperature[ResTable$Conditions==cond], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==cond])
 
         ExpDataTable <- rbind(ExpDataTable,TempDataTable)
     }
