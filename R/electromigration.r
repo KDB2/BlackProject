@@ -173,17 +173,16 @@ BlackModelization <- function(DataTable, DeviceID)
           # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
           Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
 
-          for (i in seq_along(ListConditions)){
+          for (condition in ListConditions){
               # Experimental conditions:
-              Condition <- ListConditions[i]
-              I <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
-              Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
+              I <- CleanDataTable$Stress[CleanDataTable$Conditions==condition][1]
+              Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==condition][1]  # °C
 
               # TTF calculation
               TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
 
               # Dataframe creation
-              ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp))
+              ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=condition,'Stress'=I,'Temperature'=Temp))
           }
 
           # Drawing of the residual plots
@@ -238,21 +237,21 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # List of DeviceID available in the selected exportfiles
-          DeviceID <- levels(sapply(ListFiles,function(x){factor(strsplit(x,split="_")[[1]][2])}))
+          DeviceIDList <- levels(sapply(ListFiles,function(x){factor(strsplit(x,split="_")[[1]][2])}))
 
-          for (i in seq_along(DeviceID)){
-              SubListFiles <- ListFiles[grep(DeviceID[i],ListFiles)]
+          for (DeviceID in DeviceIDList){
+              SubListFiles <- ListFiles[grep(DeviceID,ListFiles)]
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles)
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              ModelDataTable <- try(BlackModelization(DataTable, DeviceID[i]),silent=TRUE)
+              ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
               # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID[i],Scale="Lognormal",ErrorBand,Save)
+                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
               } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
-                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID[i],Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
               }
           }
 
