@@ -112,7 +112,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     if ((log10(lim.high) - log10(lim.low)) == 1 ) {
         lim.high <- lim.high * 10
         lim.low <- lim.low / 10
-    # if we have already tw0 decades, we add one decade in the area where the data are closer to the edge 
+    # if we have already tw0 decades, we add one decade in the area where the data are closer to the edge
     } else if ((log10(lim.high) - log10(lim.low)) == 2) {
         if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){
             lim.low <- lim.low / 10
@@ -242,9 +242,9 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95, 
 
     if (length(ListConditions) != 0){
 
-          for (i in seq_along(ListConditions)){
+          for (condition in ListConditions){
 
-              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == ListConditions[i] & ExpDataTable$Status == 1])
+              NbData <- length(ExpDataTable$TTF[ExpDataTable$Conditions == condition & ExpDataTable$Status == 1])
               if (NbData > 30) {
                   mZP_Value <- qnorm((1 - ConfidenceValue) / 2) # Normal case. Valid if sample size > 30.
               } else {
@@ -252,20 +252,20 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95, 
               }
 
               if (Scale == "Weibull"){
-                  CDF <- 1-exp(-exp(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]]))
+                  CDF <- 1-exp(-exp(ModelDataTable$Probability[ModelDataTable$Conditions == condition]))
                   sef <- sqrt(CDF * (1 - CDF)/NbData)
                   LowerLimit <- log(-log(1-(CDF - sef * mZP_Value)))
                   HigherLimit <- log(-log(1-(CDF + sef * mZP_Value)))
 
               } else {
-                  CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == ListConditions[i]])
+                  CDF <- pnorm(ModelDataTable$Probability[ModelDataTable$Conditions == condition])
                   sef <- sqrt(CDF * (1 - CDF)/NbData)
                   LowerLimit <- qnorm(CDF - sef * mZP_Value)
                   HigherLimit <- qnorm(CDF + sef * mZP_Value)
               }
 
-              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == ListConditions[i]],
-                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=ListConditions[i]))
+              ConfidenceDataTable <- rbind(ConfidenceDataTable, data.frame('TTF'=ModelDataTable$TTF[ModelDataTable$Conditions == condition],
+                                                                            'LowerLimit'=LowerLimit,'HigherLimit'=HigherLimit,'Conditions'=condition))
         }
     }
     return(ConfidenceDataTable)
@@ -282,10 +282,9 @@ FitDistribution <- function(DataTable,Scale="Lognormal")
     # Initialisation of ModelDataTable
     ModelDataTable <- data.frame()
 
-    for (i in seq_along(ListConditions)){
+    for (ModelCondition in ListConditions){
 
-        # Condition, Stress and Temperature stickers
-        ModelCondition <- ListConditions[i]
+        # Stress and Temperature stickers
         ModelStress <- DataTable$Stress[DataTable$Conditions==ModelCondition][1]
         ModelTemperature <- DataTable$Temperature[DataTable$Conditions==ModelCondition][1]
 
@@ -339,14 +338,14 @@ SortConditions <- function(ListConditions)
 {
   Temperature <- sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][2]})
   Temperature <- as.numeric(sapply(Temperature,function(x){substr(x,1, nchar(x)-2)}))
-  Current <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][1]}))
-  Table <- data.frame("Conditions"=ListConditions,"Current"=Current,"Temperature"=Temperature)
+  Currents <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][1]}))
+  Table <- data.frame("Conditions"=ListConditions,"Current"=Currents,"Temperature"=Temperature)
   Table <-  Table[order(Table$Temperature),]
-  ListCurrents <- levels(factor(Current))
+  ListCurrents <- levels(factor(Currents))
 
   SortedTable <- data.frame()
-  for (i in seq_along(ListCurrents)){
-    SortedTable <-  rbind(SortedTable,Table[Table$Current==ListCurrents[i],])
+  for (current in ListCurrents){
+    SortedTable <-  rbind(SortedTable,Table[Table$Current==current,])
   }
   return(as.character(SortedTable$Conditions))
 }
@@ -358,8 +357,8 @@ OrderConditions <- function(DataTable)
 {
     SortedListConditions <- SortConditions(levels(DataTable$Conditions))
     VecIndices <- c()
-    for (i in seq_along(SortedListConditions)){
-        VecIndices <- c(VecIndices, which(DataTable$Conditions == SortedListConditions[i]))
+    for (condition in SortedListConditions){
+        VecIndices <- c(VecIndices, which(DataTable$Conditions == condition))
     }
     return(VecIndices)
 }

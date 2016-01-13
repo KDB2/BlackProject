@@ -50,7 +50,7 @@ ReadDataAce <- function(ListFileName, StructureList=c())
     # ResTable initialisation
     ResTable <- data.frame()
 
-    for ( file in ListFileName){
+    for (file in ListFileName){
 
         # Read the file and store it in a temporary dataframe
         TempTable <- read.delim(file)
@@ -81,7 +81,7 @@ ReadDataAce <- function(ListFileName, StructureList=c())
     # If Structure is not empty, we select only the structures listed.
     if (length(StructureList) != 0){
         NewResTable <- data.frame()
-        for ( strucLength in StructureList){
+        for (strucLength in StructureList){
             NewResTable <- rbind(NewResTable,ResTable[ResTable$Dimension==strucLength,])
         }
         ResTable <- NewResTable
@@ -96,7 +96,7 @@ ReadDataAce <- function(ListFileName, StructureList=c())
     ExpDataTable <- data.frame()
 
     # For each condition found, we calculate the probability of failure. Data are stacked in ExpDataFrame. Lognormal scale is used.
-    for ( cond in CondList){
+    for (cond in CondList){
 
         TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==cond], ResTable$Status[ResTable$Conditions==cond],
           ResTable$Condition[ResTable$Conditions==cond], ResTable$Stress[ResTable$Conditions==cond], ResTable$Temperature[ResTable$Conditions==cond], Scale="Lognormal",ResTable$Dimension[ResTable$Conditions==cond])
