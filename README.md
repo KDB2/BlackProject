@@ -33,6 +33,8 @@
 - [ ] Fix situation where some unfinished units have a lower TTF than finished ones. (typical in EM exp) --> See J.G. Stotvig report.
 - [x] When modelization is not possible, use fitdistr to return parameters of the distro and to generate a model.
 - [ ] Improve previous solution with J.G. Stotvig codes. fitdistr is failing when censored samples are provided. Take advantage of know probability.
+- [ ] Student's t-test function in order to analyze populations (eg: impact of lenght, or tool or wafer)
+- [ ] Ficher's F-test to add to previous function.
 
 
 ## Chart:
