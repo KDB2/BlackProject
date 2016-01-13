@@ -5,6 +5,7 @@
 - [ ] Mira: clean the table to remove bad unit before working with it. Will make code more readable.
 - [ ] Ace TCR/deg files should be robust with regard of first line (iteration=...)
 - [ ] NBTI exportfile to script.
+- [ ] Rewrite for loops in the functions in order to enhance readability.
 
 
 ## Model:
