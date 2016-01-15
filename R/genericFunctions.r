@@ -43,10 +43,10 @@
 
 
 ### List of Required Packages ###
-library('ggplot2')
 library('MASS')
 library('scales')
-library('grid')
+#library('grid')
+library('ggplot2')
 library('nlstools')
 #################################
 
@@ -209,9 +209,9 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     #Box around the conditions in legend
     Graph <- Graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
     # Label/ticks size
-    Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16))
-    Graph <- Graph + theme(axis.text.y = element_text(size=16))
-    Graph <- Graph + theme(axis.ticks.length = unit(-.25, "cm"), axis.ticks.margin=unit(0.4, "cm"))
+    Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
+    Graph <- Graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    Graph <- Graph + theme(axis.ticks.length = unit(-0.25, "cm"))#, axis.ticks.margin = unit(0.4, "cm")) #Depreciated see margin above.
     # Add a title
     Graph <- Graph + ggtitle(Title)
     Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
