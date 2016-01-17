@@ -143,31 +143,26 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     # Dynamique labels as a function of the minimal probability observed.
     # Minimal proba is 0.01 %
 
-    #  Weibull
-    if (Scale == "Weibull") {
-        if (ExpDataTable[1,"Probability"]<= CalculProbability(0.1/100,Scale)){ # Case 1: lower than 0.1%
-            ListeProba <- c(0.01,0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9,99.99)
-        }
-        if (ExpDataTable[1,"Probability"]<= CalculProbability(1/100,Scale) && ExpDataTable[1,"Probability"]>= CalculProbability(0.1/100,Scale)){ # Case 2: lower than 1% but higher than 0.1%
-            ListeProba <- c(0.1,1,2,3,5,10,20,30,40,50,63,70,80,90,95,99,99.9)
-        }
-        if (ExpDataTable[1,"Probability"] >= CalculProbability(1/100,Scale)) { # Case 3: higher than 1%
-            ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
-        }
+    # Case 0: Proba min is above 1%
+    if (Scale == "Weibull"){ # Weibull requires 63% and details in low %
+        ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
+    } else { # Lognormal scale is symetric.
+        ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
+    }
+
+    MinProba <- min(ExpDataTable$Probability)
+
+    if (MinProba <= CalculProbability(1/100,Scale)){ # Case 1: lower than 1%
+        ListeProba <- c(0.1,ListeProba, 99.9)
+    }
+    if (MinProba <= CalculProbability(0.1/100,Scale)){ # Case 2: lower than 0.1%
+        ListeProba <- c(0.01,ListeProba, 99.99)
+    }
+
+    # Probability vector used to draw y axis.
     ProbaNorm <- CalculProbability(ListeProba/100,Scale)
 
-    } else { # Lognormal
-        if (ExpDataTable[1,"Probability"]<= qnorm(0.1/100)){ # Case 1: lower than 0.1%
-            ListeProba <- c(0.01,0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9,99.99)
-        }
-        if (ExpDataTable[1,"Probability"]<= qnorm(1/100) && ExpDataTable[1,"Probability"]>= qnorm(0.1/100)){ # Case 2: lower than 1% but higher than 0.1%
-            ListeProba <- c(0.1,1,5,10,20,30,40,50,60,70,80,90,95,99,99.9)
-        }
-        if (ExpDataTable[1,"Probability"] >= qnorm(1/100)) { # Case 3: higher than 1%
-            ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
-        }
-    ProbaNorm <- qnorm(ListeProba/100)
-    }
+
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
