@@ -25,7 +25,7 @@
 ResistorExportFiles <- function(lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"),
 indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(15,1.6,30,4,30,4),
 lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8)){
-
+# Stocker les conditions dans un fichier txt. 
     ################################################################################
     #                      Experimental Conditions                                 #
     # lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"), indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(6,0.64,12,1.6,36,4.8)
@@ -112,3 +112,111 @@ ReadDataResistor <- function(listFiles){
 
 
 ListFiles <- list.files(pattern="mA.txt$")
+
+
+CreateGraph <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
+# Use the table prepared with ReadData function familly and create the degradation plot.
+# Default is Loglog scale.
+{
+    # x scale limits calculation based on the data.
+    # lim <- range(ExpDataTable$TTF[ExpDataTable$Status==1]) # Min of the values is stored in [1] and max in  [2]
+    # lim.high <- 10^(ceiling(log(lim[2],10)))
+    # lim.low <- 10^(floor(log(lim[1],10)))
+    # 3 decades minimum are needed for a good looking chart.
+    # In case the distribution is only in 1 decade, we add a decade at both ends
+    # if ((log10(lim.high) - log10(lim.low)) == 1 ) {
+    #     lim.high <- lim.high * 10
+    #     lim.low <- lim.low / 10
+    # # if we have already tw0 decades, we add one decade in the area where the data are closer to the edge
+    # } else if ((log10(lim.high) - log10(lim.low)) == 2) {
+    #     if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){
+    #         lim.low <- lim.low / 10
+    #     } else {
+    #         lim.high <- lim.high * 10
+    #     }
+    # }
+
+    # Now that we have the limits, we create the graph labels for x axis.
+    # GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
+    # Now we create the minor ticks
+    # ind.lim.high <- log10(lim.high)
+    # ind.lim.low <- log10(lim.low)
+    # MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
+    GraphLabelsx <- 10^(seq(log10(10),log10(1E6)))
+    GraphLabelsy <- 10^(seq(log10(1E-3),log10(1E2)))
+    MinorTicksx <- rep(seq(1,9), 6 - 1 ) * rep(10^seq(1, 6-1), each=9)
+    MinorTicksy <- rep(seq(1,9), 2 + 3 ) * rep(10^seq(-3, 2-1), each=9)
+
+    # Function used to calculate the distance between ticks for logscale. See line 166:
+    # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    faceplant1 <- function(x) {
+        return (c(x[1]*10^.25, x[2]/10^.25))
+    }
+
+    faceplant2 <- function(x) {
+        return (MinorTicksx)
+    }
+
+    faceplant3 <- function(x) {
+        return (MinorTicksy)
+    }
+    #############################
+
+    # Graph creation with CleanTable
+    Graph <- ggplot(data=ExpDataTable, aes(x=Time, y=DeltaR*100, colour=as.factor(Stress), shape=as.factor(Stress)))
+    # box around chart + background
+    Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    # Definition of scales
+    # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    Graph <- Graph + scale_x_log10(limits = c(10,1E6),breaks = GraphLabelsx,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicksx)))
+    # Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
+    # Graph <- Graph + scale_y_continuous(limits=c(1E-3,100), breaks=c, labels=ListeProba)
+     Graph <- Graph + scale_y_log10(limits=c(1E-3,100), breaks=GraphLabelsy, labels=trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant3, n=length(MinorTicksy)))
+    # Grid definitions
+    Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
+    Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
+    Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=2, colour="white", size = 0.25))
+    # Controled symbol list -- Max is 20 conditions on the chart.
+    Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
+    Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
+    Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tblr')
+    # Add the theoretical model
+    # Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
+    # Add the confidence intervals
+    # if (ErrorBands==TRUE) {
+        # Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
+        # Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
+    # }
+    # Font size & x/y titles...
+    Graph <- Graph + xlab("Stress time (s)") + ylab("Degradation (%)")
+    Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
+    Graph <- Graph + theme(axis.title.y = element_text(face="bold", size=16))
+    # legend size
+    Graph <- Graph + theme(legend.title = element_text(size=14, face="bold"))
+    Graph <- Graph + theme(legend.text = element_text(size = 12))
+    # Box around legend
+    Graph <- Graph + theme(legend.background = element_rect())
+    Graph <- Graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
+    #Box around the conditions in legend
+    Graph <- Graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
+    # Label/ticks size
+    Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
+    Graph <- Graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    Graph <- Graph + theme(axis.ticks.length = unit(-0.25, "cm"))#, axis.ticks.margin = unit(0.4, "cm")) #Depreciated see margin above.
+    # Add a title
+    Graph <- Graph + ggtitle(Title)
+    Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
+
+    print(Graph)
+
+    # Save as png & pdf
+    # if (Save == TRUE){
+    #     if (Title != ""){
+    #         ggsave(filename=paste(Title,"png",sep="."),dpi=300)
+    #         #ggsave(filename=paste(Title,"pdf",sep="."))
+    #     } else {
+    #         ggsave(filename="Chart.png",dpi=300)
+    #         #ggsave(filename="Chart.pdf")
+    #     }
+    # }
+}

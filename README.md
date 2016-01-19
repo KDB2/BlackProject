@@ -42,5 +42,6 @@
   - [ ] MTTF, Number of samples + number of censored samples<-- Create a table for this like in Minitab
   - [ ] Model parameters <- addressed with annotate + clipping off (2nd table)
   - [x] Minimum 3 decades per charts
+  - [ ] Revert renaming CreateGraph function. Create new option for y axis setting: deg scale or proba scale. 
 
 ## Documentation:
