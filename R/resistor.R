@@ -92,3 +92,23 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8)){
 
     }
 }
+
+
+
+
+ReadDataResistor <- function(listFiles){
+
+    dataTable <- data.frame()
+
+    for (file in listFiles){
+        openFile <- read.delim(file, skip=3, header=FALSE)
+        names(openFile) <- c("ExpName","GroupName","DevName","Version","Cycle","Time","R","DeltaR","Stress","Temperature","Length","Width")
+
+        dataTable <- rbind(dataTable, openFile[openFile$DevName=="Median",])
+    }
+    return(dataTable)
+}
+
+
+
+ListFiles <- list.files(pattern="mA.txt$")
