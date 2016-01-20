@@ -35,6 +35,7 @@
 - [ ] Improve previous solution with J.G. Stotvig codes. fitdistr is failing when censored samples are provided. Take advantage of know probability.
 - [ ] Student's t-test function in order to analyze populations (eg: impact of lenght, or tool or wafer)
 - [ ] Ficher's F-test to add to previous function.
+- [ ] Copy the structure file locally and make comparison with time stamps. Would allow working without network.
 
 
 ## Chart:
