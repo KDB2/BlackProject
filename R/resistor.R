@@ -24,8 +24,9 @@
 
 ResistorExportFiles <- function(lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"),
 indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(15,1.6,30,4,30,4),
-lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8)){
-# Stocker les conditions dans un fichier txt. 
+lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
+{
+    # Stocker les conditions dans un fichier txt.
     ################################################################################
     #                      Experimental Conditions                                 #
     # lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"), indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(6,0.64,12,1.6,36,4.8)
@@ -44,7 +45,7 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8)){
         width <- widthList[i]
 
         fileName <- paste(paste(lot, wafer, device, temp, paste(stress,"mA",sep=""), sep="_"),"txt",sep=".")
-        ExpName <- paste("device","EM",paste(temp,"C",sep=""),paste(stress,"mA",sep=""),sep="_")
+        ExpName <- paste(device,"EM",paste(temp,"C",sep=""),paste(stress,"mA",sep=""),sep="_")
 
         # Main data
         resultTable <- data.frame()
@@ -104,20 +105,34 @@ ReadDataResistor <- function(listFiles){
         openFile <- read.delim(file, skip=3, header=FALSE)
         names(openFile) <- c("ExpName","GroupName","DevName","Version","Cycle","Time","R","DeltaR","Stress","Temperature","Length","Width")
 
-        dataTable <- rbind(dataTable, openFile[openFile$DevName=="Median",])
+        Time <- openFile$Time
+        DeviceNum <- openFile$DevName
+        Res <- openFile$R
+        DeltaRes <- openFile$DeltaR
+        Stress <- openFile$Stress
+        Temp <- openFile$Temperature
+        Length <- openFile$Length
+        Width <- openFile$Width
+        Conditions <- paste(Stress,"mA/",Temp,"°C",sep="")
+        DeviceName <- openFile$GroupName
+
+        tempDataFrame <- data.frame(Time, Res, DeltaRes, DeviceName, DeviceNum, Conditions,
+                                    Stress, Temp, Length, Width)
+
+
+        dataTable <- rbind(dataTable, tempDataFrame)
     }
     return(dataTable)
 }
 
 
-
-ListFiles <- list.files(pattern="mA.txt$")
-
-
-CreateGraph <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
+CreateGraphDeg <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
 # Use the table prepared with ReadData function familly and create the degradation plot.
 # Default is Loglog scale.
 {
+
+
+
     # x scale limits calculation based on the data.
     # lim <- range(ExpDataTable$TTF[ExpDataTable$Status==1]) # Min of the values is stored in [1] and max in  [2]
     # lim.high <- 10^(ceiling(log(lim[2],10)))
@@ -163,7 +178,7 @@ CreateGraph <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
     #############################
 
     # Graph creation with CleanTable
-    Graph <- ggplot(data=ExpDataTable, aes(x=Time, y=DeltaR*100, colour=as.factor(Stress), shape=as.factor(Stress)))
+    Graph <- ggplot(data=ExpDataTable, aes(x=Time, y=DeltaRes*100, colour=Conditions, shape=Conditions))
     # box around chart + background
     Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
     # Definition of scales
@@ -219,4 +234,17 @@ CreateGraph <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
     #         #ggsave(filename="Chart.pdf")
     #     }
     # }
+}
+
+
+AnalyzeRes <- function(){
+
+    ListFiles <- list.files(pattern="mA.txt$")
+    ExpDataTable <- ReadDataResistor(ListFiles)
+
+    title <- paste(ExpDataTable$DeviceName[1], "(L =", ExpDataTable$Length[1], "µm", "W =", ExpDataTable$Width[1], "µm)", sep=" ")
+
+    MedianDegTable <- ExpDataTable[ExpDataTable$DeviceNum == "Median",]
+    CreateGraphDeg(MedianDegTable,Title=title)
+
 }
