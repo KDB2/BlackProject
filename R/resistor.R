@@ -22,9 +22,10 @@
 ################################################################################
 
 
-ResistorExportFiles <- function(lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"),
-indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(15,1.6,30,4,30,4),
-lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
+ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
+# function(lot = "C18051", wafer = "W5", deviceList = c("OPNDRES","OPNDRES","OPPDRES","OPPDRES","OPRRPRES","OPRRPRES"),
+# indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(33,4.4,33,4.4,3,0.32),
+# lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.8, 6, 0.8, 6, 0.64))
 {
     # Stocker les conditions dans un fichier txt.
     ################################################################################
@@ -38,11 +39,25 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
     # Length of the files to read. All the same length as the XP are run on the same tool.
     lengthFile2Read <- length(read.delim("DEG2.001",sep=" ", header=FALSE,na.strings="NA")[,1])
 
+    #Read the setup condition from file Setup.txt
+    setupConditions <- read.delim("Setup.txt")
+
+    deviceList <- setupConditions$Device
+    temp <- setupConditions$Temp[1]
+    stressList <- setupConditions$Stress
+    lengthList <- setupConditions$Length
+    widthList <- setupConditions$Width
+    lowIndiceList <- setupConditions$IndLow
+    highIndiceList <- setupConditions$IndHigh
+
+
     for (i in seq_along(deviceList)){
         device <- deviceList[i]
         stress <- stressList[i]
         length <- lengthList[i]
         width <- widthList[i]
+        indLow <-  lowIndiceList[i]
+        indHigh <- highIndiceList[i]
 
         fileName <- paste(paste(lot, wafer, device, temp, paste(stress,"mA",sep=""), sep="_"),"txt",sep=".")
         ExpName <- paste(device,"EM",paste(temp,"C",sep=""),paste(stress,"mA",sep=""),sep="_")
@@ -50,13 +65,13 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
         # Main data
         resultTable <- data.frame()
         # USed in mean degradation calculation
-        meanDegTable <- data.frame(row.names=1:lengthFile2Read)
+        DeltaRTable <- data.frame(row.names=1:lengthFile2Read)
         # Used in mean R calculation
-        meanRTable <- data.frame(row.names=1:lengthFile2Read)
+        RTable <- data.frame(row.names=1:lengthFile2Read)
 
         deviceRef <- 1
 
-        for (j in indiceList[[i]][1]:indiceList[[i]][2]){
+        for (j in indLow: indHigh){
 
             tempData <- read.delim(listFile2Read[j],sep=" ", header=FALSE,na.strings=c("NA","1.0000000E+12",1.0000000E+12))
             tempData[,4]
@@ -64,8 +79,8 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
 
             tempTable <- data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= deviceRef,"Version"=1,"Cycle"=seq(1:length(tempData[,1])) ,"Time"=tempData[,2],"R"=tempData[,4], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
 
-            meanDegTable <- cbind(meanDegTable,deltaR)
-            meanRTable <- cbind(meanRTable,tempData[,4])
+            DeltaRTable <- cbind(DeltaRTable,deltaR)
+            RTable <- cbind(RTable,tempData[,4])
 
             # Cleaning of Error code on main table
             #tempTable <- tempTable[tempTable$R < 1E8, ]
@@ -75,21 +90,27 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
             deviceRef <- deviceRef + 1
         }
 
-    #meanDeg <- rowMeans(meanDegTable, na.rm = TRUE, dims = 1)
-    #meanR <- rowMeans(meanRTable, na.rm = TRUE, dims = 1)
-    medianR <- apply(meanRTable,1,median,na.rm=TRUE)
-    medianDeg <- apply(meanDegTable,1,median,na.rm=TRUE)
-    resultTable <- rbind(resultTable, data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= "Median","Version"=1,"Cycle"=seq(1:length(tempData[,1])),
-                "Time"=tempData[,2],"R"=medianR, "DR"=medianDeg, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width))
 
-    # Save in a file
-    cat("[DATA]\n", file=fileName)
-    cat("ExpName\tGroupName\tDevName\tVersion\tCycle\tTGES[S]\tR(Ohm)\tDeltaR(%)\tStress\tTemperature (C)\tLength (um)\tWidth (um)\n", file=fileName, append=TRUE)
-    cat("Char_50\tChar_50\tChar_50\tBigInt\tBigInt\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\n", file=fileName, append=TRUE)
-    write.table(resultTable,file=fileName, sep="\t", append=TRUE, quote=FALSE,row.names=FALSE,col.names=FALSE)
-    # cat("\n \n",file="fit.txt",append=TRUE)
-    # cat("\n",file="fit.txt",append=TRUE)
-    # cat("Experimental Data:",file="fit.txt",append=TRUE)
+        # Search of the first device failing. Statistic calculation will
+        # not be performed further, as this would not have sense.
+        minLength <- min(apply(!is.na(RTable),2,sum))
+        # Resize tables
+        DeltaRTable <- DeltaRTable[1:minLength,]
+        RTable <- RTable[1:minLength,]
+        # Median calcultation
+        medianR <- apply(RTable,1,median,na.rm=TRUE)
+        medianDeg <- apply(DeltaRTable,1,median,na.rm=TRUE)
+        resultTable <- rbind(resultTable, data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= "Median","Version"=1,"Cycle"=seq(1:minLength),
+                    "Time"=tempData[1:minLength,2],"R"=medianR, "DR"=medianDeg, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width))
+
+        # Save in a file
+        cat("[DATA]\n", file=fileName)
+        cat("ExpName\tGroupName\tDevName\tVersion\tCycle\tTGES[S]\tR(Ohm)\tDeltaR(%)\tStress\tTemperature (C)\tLength (um)\tWidth (um)\n", file=fileName, append=TRUE)
+        cat("Char_50\tChar_50\tChar_50\tBigInt\tBigInt\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\n", file=fileName, append=TRUE)
+        write.table(resultTable,file=fileName, sep="\t", append=TRUE, quote=FALSE,row.names=FALSE,col.names=FALSE)
+        # cat("\n \n",file="fit.txt",append=TRUE)
+        # cat("\n",file="fit.txt",append=TRUE)
+        # cat("Experimental Data:",file="fit.txt",append=TRUE)
 
     }
 }
@@ -97,7 +118,8 @@ lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8))
 
 
 
-ReadDataResistor <- function(listFiles){
+ReadDataResistor <- function(listFiles)
+{
 
     dataTable <- data.frame()
 
@@ -245,6 +267,8 @@ AnalyzeRes <- function(){
     title <- paste(ExpDataTable$DeviceName[1], "(L =", ExpDataTable$Length[1], "µm", "W =", ExpDataTable$Width[1], "µm)", sep=" ")
 
     MedianDegTable <- ExpDataTable[ExpDataTable$DeviceNum == "Median",]
+    # Drop the first measure for each serie as DeltaR = 0
+    MedianDegTable <- MedianDegTable[!(MedianDegTable$DeltaRes == 0),]
     CreateGraphDeg(MedianDegTable,Title=title)
 
 }
