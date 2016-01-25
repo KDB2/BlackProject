@@ -3,7 +3,7 @@
 ###    INFORMATIONS                                                          ###
 ###    ---------------------------------                                     ###
 ###                                                                          ###
-###       MODULE NAME         exportFiles.r                                  ###
+###       MODULE NAME         resistor.r                                     ###
 ###       VERSION             0.1                                            ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
@@ -23,16 +23,10 @@
 
 
 ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
-# function(lot = "C18051", wafer = "W5", deviceList = c("OPNDRES","OPNDRES","OPPDRES","OPPDRES","OPRRPRES","OPRRPRES"),
-# indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(33,4.4,33,4.4,3,0.32),
-# lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.8, 6, 0.8, 6, 0.64))
+# Exportfile creation using the DEG2.0XX files and the TCR file.
+# Experimental conditions are given in a Setup.txt file.
 {
-    # Stocker les conditions dans un fichier txt.
-    ################################################################################
-    #                      Experimental Conditions                                 #
-    # lot = "C18051", wafer = "W5", deviceList = c("OPPPCRES","OPPPCRES","OPNPCRES","OPNPCRES","OPNDRES","OPNDRES"), indiceList = list(c(1,10),c(31,40),c(11,20),c(41,50),c(21,30),c(51,60)), temp = 150, stressList = c(6,0.64,12,1.6,36,4.8)
-    # lengthList = c(10,3,10,3,10,3), widthList = c(6, 0.64, 12, 1.6, 6, 0.8)
-    ################################################################################
+
 
 
     listFile2Read <- list.files(pattern="DEG2")
@@ -41,6 +35,13 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
 
     #Read the setup condition from file Setup.txt
     setupConditions <- read.delim("Setup.txt")
+
+    # Read the TCR file where the initial resistor at stress temperature is stored.
+    tcrFile <- read.delim("TCR.EM1", skip = 2)
+    # Cleaning to keep only device 4 (calculated value, current indep)
+    tcrFile <- tcrFile[tcrFile$Device == 4, ]
+
+
 
     deviceList <- setupConditions$Device
     temp <- setupConditions$Temp[1]
@@ -74,22 +75,27 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
         for (j in indLow: indHigh){
 
             tempData <- read.delim(listFile2Read[j],sep=" ", header=FALSE,na.strings=c("NA","1.0000000E+12",1.0000000E+12))
-            tempData[,4]
-            deltaR <- (tempData[,4] - tempData[1,4])/tempData[1,4]
 
-            tempTable <- data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= deviceRef,"Version"=1,"Cycle"=seq(1:length(tempData[,1])) ,"Time"=tempData[,2],"R"=tempData[,4], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
+            refResistance <- tcrFile[tcrFile$Pkg == j ,5]
 
-            DeltaRTable <- cbind(DeltaRTable,deltaR)
-            RTable <- cbind(RTable,tempData[,4])
+            if (length(refResistance) != 0 && refResistance != 0 && !is.na(tempData[,4])){ # unit was good results are available
 
-            # Cleaning of Error code on main table
-            #tempTable <- tempTable[tempTable$R < 1E8, ]
-            tempTable <- tempTable[!is.na(tempTable$R),]
-            resultTable <- rbind(resultTable, tempTable)
+                deltaR <- (tempData[,4] - refResistance)/refResistance
 
+                tempTable <- data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= deviceRef,"Version"=1,"Cycle"=seq(1:length(tempData[,1])) ,
+                                        "Time"=tempData[,2],"R"=tempData[,4], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
+
+                DeltaRTable <- cbind(DeltaRTable,deltaR)
+                RTable <- cbind(RTable,tempData[,4])
+
+                # Cleaning of Error code on main table
+                #tempTable <- tempTable[tempTable$R < 1E8, ]
+                tempTable <- tempTable[!is.na(tempTable$R),]
+                resultTable <- rbind(resultTable, tempTable)
+
+            }
             deviceRef <- deviceRef + 1
         }
-
 
         # Search of the first device failing. Statistic calculation will
         # not be performed further, as this would not have sense.
