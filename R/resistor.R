@@ -27,21 +27,13 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
 # Experimental conditions are given in a Setup.txt file.
 {
 
-
-
     listFile2Read <- list.files(pattern="DEG2")
+
     # Length of the files to read. All the same length as the XP are run on the same tool.
     lengthFile2Read <- length(read.delim("DEG2.001",sep=" ", header=FALSE,na.strings="NA")[,1])
 
     #Read the setup condition from file Setup.txt
     setupConditions <- read.delim("Setup.txt")
-
-    # Read the TCR file where the initial resistor at stress temperature is stored.
-    tcrFile <- read.delim("TCR.EM1", skip = 2)
-    # Cleaning to keep only device 4 (calculated value, current indep)
-    tcrFile <- tcrFile[tcrFile$Device == 4, ]
-
-
 
     deviceList <- setupConditions$Device
     temp <- setupConditions$Temp[1]
@@ -50,6 +42,11 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
     widthList <- setupConditions$Width
     lowIndiceList <- setupConditions$IndLow
     highIndiceList <- setupConditions$IndHigh
+
+    # Read the TCR file where the initial resistor at stress temperature is stored.
+    tcrFile <- read.delim("TCR.EM1", skip = 2)
+    # Cleaning to keep only device 4 (calculated value, current indep)
+    tcrFile <- tcrFile[tcrFile$Device == 4, ]
 
 
     for (i in seq_along(deviceList)){
@@ -60,31 +57,34 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
         indLow <-  lowIndiceList[i]
         indHigh <- highIndiceList[i]
 
+        # Name of the file where the results are stored
         fileName <- paste(paste(lot, wafer, device, temp, paste(stress,"mA",sep=""), sep="_"),"txt",sep=".")
+        # Experiment name with principal information
         ExpName <- paste(device,"EM",paste(temp,"C",sep=""),paste(stress,"mA",sep=""),sep="_")
 
-        # Main data
+        # Initialisation Main data
         resultTable <- data.frame()
-        # USed in mean degradation calculation
+        # Initialisation table used in mean degradation calculation
         DeltaRTable <- data.frame(row.names=1:lengthFile2Read)
-        # Used in mean R calculation
+        # Initialisation table used in mean R calculation
         RTable <- data.frame(row.names=1:lengthFile2Read)
 
         deviceRef <- 1
 
         for (j in indLow: indHigh){
-
+            # Read the device dedicated file from MIRA
             tempData <- read.delim(listFile2Read[j],sep=" ", header=FALSE,na.strings=c("NA","1.0000000E+12",1.0000000E+12))
-
+            # Retrive the initial resistance (before stress)
             refResistance <- tcrFile[tcrFile$Pkg == j ,5]
 
-            if (length(refResistance) != 0 && refResistance != 0 && !is.na(tempData[,4])){ # unit was good results are available
-
+            # Check if unit was good. if yes, results are available
+            if (length(refResistance) != 0 && refResistance != 0 && !is.na(tempData[,4])){
+                # DeltaR calculation
                 deltaR <- (tempData[,4] - refResistance)/refResistance
-
+                # Creation of the global result data.frame
                 tempTable <- data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= deviceRef,"Version"=1,"Cycle"=seq(1:length(tempData[,1])) ,
                                         "Time"=tempData[,2],"R"=tempData[,4], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
-
+                # same for DR table and R table.
                 DeltaRTable <- cbind(DeltaRTable,deltaR)
                 RTable <- cbind(RTable,tempData[,4])
 
@@ -92,8 +92,8 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
                 #tempTable <- tempTable[tempTable$R < 1E8, ]
                 tempTable <- tempTable[!is.na(tempTable$R),]
                 resultTable <- rbind(resultTable, tempTable)
-
             }
+
             deviceRef <- deviceRef + 1
         }
 
@@ -106,6 +106,8 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
         # Median calcultation
         medianR <- apply(RTable,1,median,na.rm=TRUE)
         medianDeg <- apply(DeltaRTable,1,median,na.rm=TRUE)
+
+        # add the median degradation as a device at the end of the main table
         resultTable <- rbind(resultTable, data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= "Median","Version"=1,"Cycle"=seq(1:minLength),
                     "Time"=tempData[1:minLength,2],"R"=medianR, "DR"=medianDeg, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width))
 
@@ -114,10 +116,6 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
         cat("ExpName\tGroupName\tDevName\tVersion\tCycle\tTGES[S]\tR(Ohm)\tDeltaR(%)\tStress\tTemperature (C)\tLength (um)\tWidth (um)\n", file=fileName, append=TRUE)
         cat("Char_50\tChar_50\tChar_50\tBigInt\tBigInt\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\tDouble\n", file=fileName, append=TRUE)
         write.table(resultTable,file=fileName, sep="\t", append=TRUE, quote=FALSE,row.names=FALSE,col.names=FALSE)
-        # cat("\n \n",file="fit.txt",append=TRUE)
-        # cat("\n",file="fit.txt",append=TRUE)
-        # cat("Experimental Data:",file="fit.txt",append=TRUE)
-
     }
 }
 
