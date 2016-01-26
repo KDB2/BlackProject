@@ -202,7 +202,7 @@ BlackModelization <- function(DataTable, DeviceID)
           cat("Experimental Data:",file="fit.txt",append=TRUE)
           cat("\n",file="fit.txt",append=TRUE)
           capture.output(DataTable,file="fit.txt",append=TRUE)
-          return(ModelDataTable)
+          return(list(ModelDataTable, c(A,n,Ea,Scale))
         }
     }
 }
@@ -244,14 +244,14 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles)
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
+              ModelDataTable <- try(BlackModelization(DataTable, DeviceID)[[1]],silent=TRUE)
               # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-                    CreateGraphProba(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
+                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
               } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
-                    CreateGraphProba(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
               }
           }
 
