@@ -271,7 +271,7 @@ AnalyzeRes <- function(){
     title <- paste(ExpDataTable$DeviceName[1], "(L =", ExpDataTable$Length[1], "µm", "W =", ExpDataTable$Width[1], "µm)", sep=" ")
 
     MedianDegTable <- ExpDataTable[ExpDataTable$DeviceNum == "Median",]
-    # Drop the first measure for each serie as DeltaR = 0
+    # Drop the first measure for each serie in case DeltaR = 0 (Should not be the case)
     MedianDegTable <- MedianDegTable[!(MedianDegTable$DeltaRes == 0),]
     CreateGraphDeg(MedianDegTable,Title=title)
 
