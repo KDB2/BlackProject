@@ -151,11 +151,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
     g <- coef(Model)[2]
     Ea <- coef(Model)[3]
     beta <- coef(Model)[4]
-    # Residual Sum of Squares
-    RSS <- sum(resid(Model)^2)
-    # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
-    TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
-    Rsq <- 1-RSS/TSS # R-squared measure
+
 
     # Using the parameters and the conditions, theoretical distributions are created
     ListConditions <- levels(CleanDataTable$Conditions)
@@ -178,23 +174,10 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
         ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=V,'Temperature'=Temp))
     }
 
-    # Drawing of the residual plots
-    plot(nlsResiduals(Model))
-    # Display of fit results
-    print(DeviceID)
-    print(summary(Model))
-    print(paste("Residual squared sum: ",RSS,sep=""))
-    #print(coef(Model))
-    #print(sd(resid(Model)))
 
-    # Save in a file
-    capture.output(summary(Model),file="fit.txt")
-    cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
-    cat(RSS,file="fit.txt",append=TRUE)
-    cat("\n \n",file="fit.txt",append=TRUE)
-    cat("Experimental Data:",file="fit.txt",append=TRUE)
-    cat("\n",file="fit.txt",append=TRUE)
-    capture.output(DataTable,file="fit.txt",append=TRUE)
+    FitResultsDisplay(Model, DataTable, DeviceID)
+
+
     return(ModelDataTable)
 
 }

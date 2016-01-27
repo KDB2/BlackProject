@@ -50,6 +50,12 @@ library('ggplot2')
 library('nlstools')
 #################################
 
+###### List of Constants  ######
+k <- 1.38E-23 # Boltzmann
+e <- 1.6E-19 # electron charge
+################################
+
+
 
 CalculProbability <- function(Probability, Scale="Lognormal")
 # Given a vector Probability of probabilities, the function calculates
@@ -356,4 +362,30 @@ OrderConditions <- function(DataTable)
         VecIndices <- c(VecIndices, which(DataTable$Conditions == condition))
     }
     return(VecIndices)
+}
+
+
+FitResultsDisplay <- function(Model, DataTable, DeviceID)
+{
+    CleanDataTable <- DataTable[DataTable$Status==1,]
+    # Residual Sum of Squares
+    RSS <- sum(resid(Model)^2)
+    # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
+    TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
+    Rsq <- 1-RSS/TSS # R-squared measure
+
+    # Drawing of the residual plots
+    plot(nlsResiduals(Model))
+    # Display of fit results
+    cat(DeviceID,"\n")
+    print(summary(Model))
+    cat(paste("Residual squared sum: ",RSS,sep=""))
+    # Save in a file
+    capture.output(summary(Model),file="fit.txt")
+    cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+    cat(RSS,file="fit.txt",append=TRUE)
+    cat("\n \n",file="fit.txt",append=TRUE)
+    cat("Experimental Data:",file="fit.txt",append=TRUE)
+    cat("\n",file="fit.txt",append=TRUE)
+    capture.output(DataTable,file="fit.txt",append=TRUE)
 }
