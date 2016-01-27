@@ -37,6 +37,7 @@
 - [ ] Student's t-test function in order to analyze populations (eg: impact of lenght, or tool or wafer)
 - [ ] Ficher's F-test to add to previous function.
 - [ ] Copy the structure file locally and make comparison with time stamps. Would allow working without network.
+- [ ] 
 
 
 ## Chart:
@@ -44,6 +45,6 @@
   - [ ] MTTF, Number of samples + number of censored samples<-- Create a table for this like in Minitab
   - [ ] Model parameters <- addressed with annotate + clipping off (2nd table)
   - [x] Minimum 3 decades per charts
-  - [ ] Revert renaming CreateGraph function. Create new option for y axis setting: deg scale or proba scale. 
+  - [ ] Revert renaming CreateGraph function. Create new option for y axis setting: deg scale or proba scale.
 
 ## Documentation:
