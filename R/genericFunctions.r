@@ -319,8 +319,54 @@ FitDistribution <- function(DataTable,Scale="Lognormal")
         ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=x,'Status'=1,'Probability'=y,'Conditions'=ModelCondition,'Stress'=ModelStress,'Temperature'=ModelTemperature) )
     }
     return(ModelDataTable)
-
 }
+
+
+FitResultsDisplay <- function(Model, DataTable, DeviceID)
+# Given a model and an experimental dataset
+# Return the parameters of the model and the residual error
+# Save the information in a fit.txt file
+{
+    CleanDataTable <- DataTable[DataTable$Status==1,]
+    # Residual Sum of Squares
+    RSS <- sum(resid(Model)^2)
+    # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
+    TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
+    Rsq <- 1-RSS/TSS # R-squared measure
+
+    # Drawing of the residual plots
+    plot(nlsResiduals(Model))
+    # Display of fit results
+    cat(DeviceID,"\n")
+    print(summary(Model))
+    cat(paste("Residual squared sum: ",RSS,sep=""))
+    # Save in a file
+    capture.output(summary(Model),file="fit.txt")
+    cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+    cat(RSS,file="fit.txt",append=TRUE)
+    cat("\n \n",file="fit.txt",append=TRUE)
+    cat("Experimental Data:",file="fit.txt",append=TRUE)
+    cat("\n",file="fit.txt",append=TRUE)
+    capture.output(DataTable,file="fit.txt",append=TRUE)
+}
+
+
+ModelFit <- function(dataTable, Area, Law="BlackLaw")
+# Perform a least square fit on an experimental dataset
+# Return a model containing the parameters and the residuals.
+{
+    if (Law == "BlackLaw") {
+        # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
+        Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/Area)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), DataTable,
+                start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+    } else if (Law == "TDDB"){
+        # TDDB model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
+        Model <- nls(log10(TTF) ~ log10(exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(-1/beta)*exp(Probability/beta)), DataTable,
+                start=list(t0=30,g=1,Ea=0.2,beta=1),control= list(maxiter = 50, tol = 1e-6))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+    }
+    return(Model)
+}
+
 
 Ranking <- function(TTF)
 # Fraction estimator calculation
@@ -351,6 +397,7 @@ SortConditions <- function(ListConditions)
   return(as.character(SortedTable$Conditions))
 }
 
+
 OrderConditions <- function(DataTable)
 # Order a list of conditions to avoid 6mA being
 # bigger as 14mA.
@@ -362,30 +409,4 @@ OrderConditions <- function(DataTable)
         VecIndices <- c(VecIndices, which(DataTable$Conditions == condition))
     }
     return(VecIndices)
-}
-
-
-FitResultsDisplay <- function(Model, DataTable, DeviceID)
-{
-    CleanDataTable <- DataTable[DataTable$Status==1,]
-    # Residual Sum of Squares
-    RSS <- sum(resid(Model)^2)
-    # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
-    TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
-    Rsq <- 1-RSS/TSS # R-squared measure
-
-    # Drawing of the residual plots
-    plot(nlsResiduals(Model))
-    # Display of fit results
-    cat(DeviceID,"\n")
-    print(summary(Model))
-    cat(paste("Residual squared sum: ",RSS,sep=""))
-    # Save in a file
-    capture.output(summary(Model),file="fit.txt")
-    cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
-    cat(RSS,file="fit.txt",append=TRUE)
-    cat("\n \n",file="fit.txt",append=TRUE)
-    cat("Experimental Data:",file="fit.txt",append=TRUE)
-    cat("\n",file="fit.txt",append=TRUE)
-    capture.output(DataTable,file="fit.txt",append=TRUE)
 }

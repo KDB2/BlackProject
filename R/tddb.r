@@ -137,15 +137,10 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
 
     Area <- DataTable$Dimension * 1E-12 # m^2
 
-    # Physical constants
-    k <- 1.38E-23 # Boltzmann
-    e <- 1.6E-19 # electron charge
-
     # Remove the units where status is 0
     CleanDataTable <- DataTable[DataTable$Status==1,]
 
-    # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-    Model <- nls(log10(TTF) ~ log10(exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(-1/beta)*exp(Probability/beta)), CleanDataTable, start=list(t0=30,g=1,Ea=0.2,beta=1),control= list(maxiter = 50, tol = 1e-6))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
+    Model <- ModelFit(CleanDataTable, Area, Law="TDDB")
     # Parameters Extraction
     t0 <- coef(Model)[1]
     g <- coef(Model)[2]

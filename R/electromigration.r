@@ -132,10 +132,10 @@ BlackModelization <- function(DataTable, DeviceID)
 
         W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
         H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
-        S <- W*H*1E-12 # m^2
+        Area <- W*H*1E-12 # m^2
 
-        # if S is a positive number different from 0, we can proceed:
-        if (is.na(S) || S<=0 ) {
+        # if Area is a positive number different from 0, we can proceed:
+        if (is.na(Area) || Area<=0 ) {
             print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
             # Force an error in the return for BlackAnalysis.
             ModelDataTable <- data.frame()
@@ -146,8 +146,8 @@ BlackModelization <- function(DataTable, DeviceID)
             # Remove the units where status is 0
             CleanDataTable <- DataTable[DataTable$Status==1,]
 
-            Model <- ModelFit(CleanDataTable)
-          
+            Model <- ModelFit(CleanDataTable, Area, Law="BlackLaw")
+
             # Parameters Extraction
             A <- coef(Model)[1]
             n <- coef(Model)[2]
@@ -176,7 +176,7 @@ BlackModelization <- function(DataTable, DeviceID)
 
           FitResultsDisplay(Model, DataTable, DeviceID)
 
-          return(list(ModelDataTable, c(A,n,Ea,Scale))
+          return(ModelDataTable)
         }
     }
 }
@@ -218,7 +218,7 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles)
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              ModelDataTable <- try(BlackModelization(DataTable, DeviceID)[[1]],silent=TRUE)
+              ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
               # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
@@ -333,13 +333,4 @@ BlackModelization.me <- function(DataTable, DeviceID)
           return(ModelDataTable)
         }
     }
-}
-
-
-ModelFit <- function(dataTable)
-{
-    # Black model / Log scale: use of log10 to avoid giving too much importance to data with a high TTF
-    Model <- nls(log10(TTF) ~ log10(exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability)), CleanDataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3),control= list(maxiter = 50, tol = 1e-7))#, minFactor = 1E-5, printEval = FALSE, warnOnly = FALSE))#,trace = T)
-    # Model <- nls(TTF ~ exp(A)*(Stress*1E-3/S)^(-n)*exp((Ea*e)/(k*(Temperature+273.15))+Scale*Probability), DataTable, start=list(A=30,n=1,Ea=0.7,Scale=0.3))
-    return(Model)
 }
