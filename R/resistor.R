@@ -183,10 +183,10 @@ CreateGraphDeg <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
     # ind.lim.high <- log10(lim.high)
     # ind.lim.low <- log10(lim.low)
     # MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
-    GraphLabelsx <- 10^(seq(log10(10),log10(1E6)))
-    GraphLabelsy <- 10^(seq(log10(1E-3),log10(1E2)))
-    MinorTicksx <- rep(seq(1,9), 6 - 1 ) * rep(10^seq(1, 6-1), each=9)
-    MinorTicksy <- rep(seq(1,9), 2 + 3 ) * rep(10^seq(-3, 2-1), each=9)
+    GraphLabelsx <- 10^(seq(log10(10),log10(1E9)))
+    GraphLabelsy <- 10^(seq(log10(1E-2),log10(1E2)))
+    MinorTicksx <- rep(seq(1,9), 9 - 1 ) * rep(10^seq(1, 9-1), each=9)
+    MinorTicksy <- rep(seq(1,9), 2 + 2 ) * rep(10^seq(-2, 2-1), each=9)
 
     # Function used to calculate the distance between ticks for logscale. See line 166:
     # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
@@ -209,10 +209,10 @@ CreateGraphDeg <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
     Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
     # Definition of scales
     # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    Graph <- Graph + scale_x_log10(limits = c(10,1E6),breaks = GraphLabelsx,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicksx)))
+    Graph <- Graph + scale_x_log10(limits = c(10,1E9),breaks = GraphLabelsx,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicksx)))
     # Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     # Graph <- Graph + scale_y_continuous(limits=c(1E-3,100), breaks=c, labels=ListeProba)
-     Graph <- Graph + scale_y_log10(limits=c(1E-3,100), breaks=GraphLabelsy, labels=trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant3, n=length(MinorTicksy)))
+     Graph <- Graph + scale_y_log10(limits=c(1E-2,100), breaks=GraphLabelsy, labels=trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant3, n=length(MinorTicksy)))
     # Grid definitions
     Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
     Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
@@ -247,7 +247,8 @@ CreateGraphDeg <- function(ExpDataTable,  Title="",  ErrorBands=TRUE, Save=TRUE)
     # Add a title
     Graph <- Graph + ggtitle(Title)
     Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
-
+    Graph <- Graph + geom_vline(xintercept = 5E8, color = "red", linetype=2 )
+    Graph <- Graph + geom_hline(yintercept = 5, color = "red", linetype=2 )
     print(Graph)
 
     # Save as png & pdf
