@@ -141,11 +141,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
     CleanDataTable <- DataTable[DataTable$Status==1,]
 
     Model <- ModelFit(CleanDataTable, Area, Law="TDDB")
-    # Parameters Extraction
-    t0 <- coef(Model)[1]
-    g <- coef(Model)[2]
-    Ea <- coef(Model)[3]
-    beta <- coef(Model)[4]
+
 
 
     # Using the parameters and the conditions, theoretical distributions are created
@@ -163,7 +159,7 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
         Area <- CleanDataTable$Dimension[CleanDataTable$Conditions==Condition][1] * 1E-12 # m^2
 
         # TTF calculation
-        TTF <- exp(t0)*exp(-g*V)*exp((Ea*e)/(k*(Temp+273.15)))*Area^(-1/beta)*exp(Proba/beta)
+        TTF <- CalculLifeTime(Model, Area, V, Temp, Proba, Law = "TDDB")
 
         # Dataframe creation
         ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=V,'Temperature'=Temp))

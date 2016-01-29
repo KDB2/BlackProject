@@ -410,3 +410,37 @@ OrderConditions <- function(DataTable)
     }
     return(VecIndices)
 }
+
+
+CalculLifeTime <- function(Model, Area, Stress, Temperature, Probability,  Law="BlackLaw")
+# Perform a least square fit on an experimental dataset
+# Return a model containing the parameters and the residuals.
+{
+    if (Law == "BlackLaw") {
+        # Parameters Extraction
+        A <- coef(Model)[1]
+        n <- coef(Model)[2]
+        Ea <-coef(Model)[3]
+        Scale <- coef(Model)[4]
+
+        TTF <- exp(A)*(Stress*0.001/Area)^(-n)*exp((Ea*e)/(k*(273.15+Temperature))+ Probability * Scale)
+
+    } else if (Law == "TDDB"){
+        # Parameters Extraction
+        t0 <- coef(Model)[1]
+        g <- coef(Model)[2]
+        Ea <- coef(Model)[3]
+        beta <- coef(Model)[4]
+
+        TTF <- exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*Area^(-1/beta)*exp(Probability/beta)
+
+    }
+
+
+    return(TTF)
+}
+
+CreateModelDataTable <- function(Model, ListConditions, Area, Law="BlackLaw")
+{
+    
+}

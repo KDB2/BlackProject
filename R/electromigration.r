@@ -135,7 +135,7 @@ BlackModelization <- function(DataTable, DeviceID)
         Area <- W*H*1E-12 # m^2
 
         # if Area is a positive number different from 0, we can proceed:
-        if (is.na(Area) || Area<=0 ) {
+        if (is.na(Area) || Area <=0 ) {
             print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
             # Force an error in the return for BlackAnalysis.
             ModelDataTable <- data.frame()
@@ -153,7 +153,7 @@ BlackModelization <- function(DataTable, DeviceID)
             n <- coef(Model)[2]
             Ea <-coef(Model)[3]
             Scale <- coef(Model)[4]
-
+            
             # Using the parameters and the conditions, theoretical distributions are created
             ListConditions <- levels(CleanDataTable$Conditions)
 
@@ -168,7 +168,7 @@ BlackModelization <- function(DataTable, DeviceID)
               Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==condition][1]  # °C
 
               # TTF calculation
-              TTF <- exp(A)*(I*0.001/S)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
+              TTF <- exp(A)*(I*0.001/Area)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
 
               # Dataframe creation
               ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=condition,'Stress'=I,'Temperature'=Temp))
