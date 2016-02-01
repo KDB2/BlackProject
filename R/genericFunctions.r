@@ -56,6 +56,34 @@ e <- 1.6E-19 # electron charge
 ################################
 
 
+CalculLifeTime <- function(Model, Area, Stress, Temperature, Probability,  Law="BlackLaw")
+# Calcul the lifetime of a device for a given condition (Temp/stress) at a given failure rate
+# with a given model.
+# For TDDB, area is transformed in m² whereas it is already given in m² for EM.
+# Currently supports Black equation and a TDDB lifetime model.
+{
+    if (Law == "BlackLaw") {
+        # Parameters Extraction
+        A <- coef(Model)[1]
+        n <- coef(Model)[2]
+        Ea <-coef(Model)[3]
+        Scale <- coef(Model)[4]
+
+        TTF <- exp(A)*(Stress*0.001/Area)^(-n)*exp((Ea*e)/(k*(273.15+Temperature))+ Probability * Scale)
+
+    } else if (Law == "TDDB"){
+        # Parameters Extraction
+        t0 <- coef(Model)[1]
+        g <- coef(Model)[2]
+        Ea <- coef(Model)[3]
+        beta <- coef(Model)[4]
+
+        TTF <- exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*(Area*1E-12)^(-1/beta)*exp(Probability/beta)
+
+    }
+    return(TTF)
+}
+
 
 CalculProbability <- function(Probability, Scale="Lognormal")
 # Given a vector Probability of probabilities, the function calculates
@@ -232,6 +260,33 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 }
 
 
+CreateModelDataTable <- function(Model, ListConditions, Area, Law="BlackLaw", Scale="Lognormal")
+# Return a theoretical lifetime for a given set of Conditions and a given model.
+# Result is returned in a dataframe.
+# Currently supported model are Black equation and a TDDB lifetime model.
+{
+    # Initialisation
+    ModelDataTable <- data.frame()
+    # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
+    Proba <- seq(CalculProbability(0.0001, Scale), CalculProbability(0.9999, Scale), 0.05)
+
+    # Extraction of temperature and stress conditions
+    Temperature <- sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][2]})
+    Temperature <- as.numeric(sapply(Temperature,function(x){substr(x,1, nchar(x)-2)}))
+    Stress <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][1]}))
+
+    for (i in seq_along(Temperature)){
+
+        # TTF calculation
+        TTF <- CalculLifeTime(Model, Area, Stress[i], Temperature[i], Proba, Law)
+        # Dataframe creation
+        ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=ListConditions[i],'Stress'=Stress[i],'Temperature'=Temperature[i], 'Area'=Area))
+
+    }
+    return(ModelDataTable)
+}
+
+
 ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95, Scale="Lognormal")
 # Generation of confidence intervals
 # Based on Kaplan Meier estimator and Greenwood confidence intervals
@@ -276,6 +331,7 @@ ErrorEstimation <- function(ExpDataTable, ModelDataTable, ConfidenceValue=0.95, 
 FitDistribution <- function(DataTable,Scale="Lognormal")
 # Extract simple distribution parameters (MTTF, scale) and return
 # a ModelDataTable to plot the theoretical distribution
+# Use fitdistr function
 {
     # For each condtion we estimate a theoretical distribution
     ListConditions <- levels(DataTable$Conditions)
@@ -409,57 +465,4 @@ OrderConditions <- function(DataTable)
         VecIndices <- c(VecIndices, which(DataTable$Conditions == condition))
     }
     return(VecIndices)
-}
-
-
-CalculLifeTime <- function(Model, Area, Stress, Temperature, Probability,  Law="BlackLaw")
-# Calcul the lifetime of a device for a given condition (Temp/stress) at a given failure rate
-# with a given model.
-# For TDDB, are is transformed in m² whereas it is already given in m² for EM.
-{
-    if (Law == "BlackLaw") {
-        # Parameters Extraction
-        A <- coef(Model)[1]
-        n <- coef(Model)[2]
-        Ea <-coef(Model)[3]
-        Scale <- coef(Model)[4]
-
-        TTF <- exp(A)*(Stress*0.001/Area)^(-n)*exp((Ea*e)/(k*(273.15+Temperature))+ Probability * Scale)
-
-    } else if (Law == "TDDB"){
-        # Parameters Extraction
-        t0 <- coef(Model)[1]
-        g <- coef(Model)[2]
-        Ea <- coef(Model)[3]
-        beta <- coef(Model)[4]
-
-        TTF <- exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*(Area*1E-12)^(-1/beta)*exp(Probability/beta)
-
-    }
-    return(TTF)
-}
-
-CreateModelDataTable <- function(Model, ListConditions, Area, Law="BlackLaw", Scale="Lognormal")
-# Return a theoretical lifetime for a given set of Conditions and a given model.
-# Result is returned in a dataframe.
-{
-    # Initialisation
-    ModelDataTable <- data.frame()
-    # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-    Proba <- seq(CalculProbability(0.0001, Scale), CalculProbability(0.9999, Scale), 0.05)
-
-    # Extraction of temperature and stress conditions
-    Temperature <- sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][2]})
-    Temperature <- as.numeric(sapply(Temperature,function(x){substr(x,1, nchar(x)-2)}))
-    Stress <- as.numeric(sapply(ListConditions,function(x){strsplit(x,split="[mAV]*/")[[1]][1]}))
-
-    for (i in seq_along(Temperature)){
-
-        # TTF calculation
-        TTF <- CalculLifeTime(Model, Area, Stress[i], Temperature[i], Proba, Law)
-        # Dataframe creation
-        ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=ListConditions[i],'Stress'=Stress[i],'Temperature'=Temperature[i], 'Area'=Area))
-
-    }
-    return(ModelDataTable)
 }

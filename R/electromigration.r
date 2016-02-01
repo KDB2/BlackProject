@@ -32,11 +32,42 @@
 ###    FUNCTIONS                                                             ###
 ###    ---------------------------------                                     ###
 ###                                                                          ###
+###       AddArea                   Retrieve structure physical dimensions   ###
 ###       BlackAnalysis             Main function for data analysis          ###
 ###       BlackModelization         Extraction of Black's parameters         ###
 ###       ReadDataAce               Read Exportfile and create data table    ###
 ###                                                                          ###
 ################################################################################
+
+AddArea <- function(DataTable, DeviceID)
+# Retrive the area of an EM device and add it to the dataTable
+# Return the new dataTable if it succeeds.
+# Return the old one otherwise
+{
+    # Read the list of device to retrieve the section parameters.
+    ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
+
+    #if file is not present, error is returned.
+    if (class(ListDevice) == "try-error"){
+        print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
+        return(DataTable)
+    } else {
+        W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+        H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
+        Area <- W*H*1E-12 # m^2
+
+        # if Area is a positive number different from 0, we can proceed:
+        if (is.na(Area) || Area <=0 || length(Area)==0) {
+            print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
+            # Force an error in the return for BlackAnalysis.
+            # Error <- try(log("-2"),silent=TRUE)
+            return(DataTable)
+        } else { # we proceed
+            DataTable$Area <- Area
+            return(DataTable)
+        }
+    }
+}
 
 
 ReadDataAce <- function(ListFileName, StructureList=c())
@@ -182,7 +213,7 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               DataTable <- ReadDataAce(SubListFiles)
               # Try to import the area
               DataTable <- AddArea(DataTable, DeviceID)
-              
+
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
               ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
               if (class(ModelDataTable) != "try-error"){
@@ -298,37 +329,6 @@ BlackModelization.me <- function(DataTable, DeviceID)
           cat("\n",file="fit.txt",append=TRUE)
           capture.output(DataTable,file="fit.txt",append=TRUE)
           return(ModelDataTable)
-        }
-    }
-}
-
-
-AddArea <- function(DataTable, DeviceID)
-# Retrive the area of an EM device and add it to the dataTable
-# Return the new dataTable if it succeeds.
-# Return the old one otherwise
-{
-    # Read the list of device to retrieve the section parameters.
-    ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
-
-    #if file is not present, error is returned.
-    if (class(ListDevice) == "try-error"){
-        print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
-        return(DataTable)
-    } else {
-        W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
-        H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
-        Area <- W*H*1E-12 # m^2
-
-        # if Area is a positive number different from 0, we can proceed:
-        if (is.na(Area) || Area <=0 || length(Area)==0) {
-            print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
-            # Force an error in the return for BlackAnalysis.
-            # Error <- try(log("-2"),silent=TRUE)
-            return(DataTable)
-        } else { # we proceed
-            DataTable$Area <- Area
-            return(DataTable)
         }
     }
 }
