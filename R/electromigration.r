@@ -200,7 +200,8 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     oldw <- getOption("warn")
     options(warn = -1)
     #rm(list=ls())
-    ListFiles <- list.files(pattern="*exportfile.txt")
+    # ListFiles <- list.files(pattern="*exportfile.txt")
+    ListFiles <- SelectFiles()
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # List of DeviceID available in the selected exportfiles
