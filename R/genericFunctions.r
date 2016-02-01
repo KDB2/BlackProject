@@ -449,10 +449,12 @@ SelectFiles <- function()
     Filters <- matrix(c("Text", ".txt", "All files", "*"),2, 2, byrow = TRUE)
 
     # Gui for file selection
-    listFiles <- tk_choose.files(default = path2Current, caption = "Select files",
+    selection <- tk_choose.files(default = path2Current, caption = "Select files",
                             multi = TRUE, filters = Filters, index = 1)
 
-    return(listFiles[-1])
+    # Cleaning to remove the path and keep only the filename (last item)
+    listFiles <- sapply(strsplit(selection[-1],split="/"),function(x){x[length(x)]})
+    return(listFiles)
 }
 
 
