@@ -122,63 +122,26 @@ BlackModelization <- function(DataTable, DeviceID)
 # Proba in standard deviations
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
 {
-    # Read the list of device to retrieve the section parameters.
-    ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
-    #if file is not present, error is returned.
-    if (class(ListDevice) == "try-error"){
-        print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
-        return(ListDevice)
-    } else {
+    # Remove the units where status is 0
+    CleanDataTable <- DataTable[DataTable$Status==1,]
+    # Modelization
+    Model <- ModelFit(CleanDataTable, Law="BlackLaw")
 
-        W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
-        H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
-        Area <- W*H*1E-12 # m^2
+    # Parameters Extraction
+    # A <- coef(Model)[1]
+    # n <- coef(Model)[2]
+    # Ea <-coef(Model)[3]
+    # Scale <- coef(Model)[4]
 
-        # if Area is a positive number different from 0, we can proceed:
-        if (is.na(Area) || Area <=0 ) {
-            print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
-            # Force an error in the return for BlackAnalysis.
-            ModelDataTable <- data.frame()
-            as(ModelDataTable,"try-error")
-            return(ModelDataTable)
-        } else { # we proceed
+    # Using the parameters and the conditions, theoretical distributions are created
+    ListConditions <- levels(CleanDataTable$Conditions)
+    Area <- CleanDataTable$Area[1]
+    ModelDataTable <- CreateModelDataTable(Model, ListConditions, Area, Law="BlackLaw", Scale="Lognormal")
 
-            # Remove the units where status is 0
-            CleanDataTable <- DataTable[DataTable$Status==1,]
+    # Display a few information regarding the model: parameters, goodness of fit...
+    FitResultsDisplay(Model, DataTable, DeviceID)
 
-            Model <- ModelFit(CleanDataTable, Area, Law="BlackLaw")
-
-            # Parameters Extraction
-            A <- coef(Model)[1]
-            n <- coef(Model)[2]
-            Ea <-coef(Model)[3]
-            Scale <- coef(Model)[4]
-            
-            # Using the parameters and the conditions, theoretical distributions are created
-            ListConditions <- levels(CleanDataTable$Conditions)
-
-            # Initialisation
-            ModelDataTable <- data.frame()
-            # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-            Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
-
-          for (condition in ListConditions){
-              # Experimental conditions:
-              I <- CleanDataTable$Stress[CleanDataTable$Conditions==condition][1]
-              Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==condition][1]  # °C
-
-              # TTF calculation
-              TTF <- exp(A)*(I*0.001/Area)^(-n)*exp((Ea*e)/(k*(273.15+Temp))+ Proba * Scale)
-
-              # Dataframe creation
-              ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=condition,'Stress'=I,'Temperature'=Temp))
-          }
-
-          FitResultsDisplay(Model, DataTable, DeviceID)
-
-          return(ModelDataTable)
-        }
-    }
+    return(ModelDataTable)
 }
 
 
@@ -207,7 +170,6 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     options(warn = -1)
     #rm(list=ls())
     ListFiles <- list.files(pattern="*exportfile.txt")
-    #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # List of DeviceID available in the selected exportfiles
@@ -215,14 +177,19 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
 
           for (DeviceID in DeviceIDList){
               SubListFiles <- ListFiles[grep(DeviceID,ListFiles)]
+
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles)
+              # Try to import the area
+              DataTable <- AddArea(DataTable, DeviceID)
+              
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
               ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
-              # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
                     CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
+
+              # There was an error either with Area or with modelization, we go to fallback mode
               } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
                     CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
@@ -331,6 +298,37 @@ BlackModelization.me <- function(DataTable, DeviceID)
           cat("\n",file="fit.txt",append=TRUE)
           capture.output(DataTable,file="fit.txt",append=TRUE)
           return(ModelDataTable)
+        }
+    }
+}
+
+
+AddArea <- function(DataTable, DeviceID)
+# Retrive the area of an EM device and add it to the dataTable
+# Return the new dataTable if it succeeds.
+# Return the old one otherwise
+{
+    # Read the list of device to retrieve the section parameters.
+    ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
+
+    #if file is not present, error is returned.
+    if (class(ListDevice) == "try-error"){
+        print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
+        return(DataTable)
+    } else {
+        W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
+        H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
+        Area <- W*H*1E-12 # m^2
+
+        # if Area is a positive number different from 0, we can proceed:
+        if (is.na(Area) || Area <=0 || length(Area)==0) {
+            print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
+            # Force an error in the return for BlackAnalysis.
+            # Error <- try(log("-2"),silent=TRUE)
+            return(DataTable)
+        } else { # we proceed
+            DataTable$Area <- Area
+            return(DataTable)
         }
     }
 }

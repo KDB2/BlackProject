@@ -59,7 +59,7 @@ ReadDataTDDB <- function(ListFiles)
         # Store important data
         TTF <- File[,14]
         Temperature <- File[,9]
-        Dimension <- File[,17]
+        Area <- File[,17]
         Stress <- File[,12]
         Status <- File[,15]
         # Make status similar to Electromigration: -1 wrong device, not to be considered in statistic; 1 failed; 0 not failed.
@@ -80,17 +80,17 @@ ReadDataTDDB <- function(ListFiles)
         # Condition stickers
         Conditions <- paste(Stress,"V/",Temperature,"°C",sep="")
         # Creation of a dataframe to store the data
-        TempDataFrame <- data.frame(TTF,Status,Conditions,Stress,Temperature,Dimension)
+        TempDataFrame <- data.frame(TTF,Status,Conditions,Stress,Temperature,Area)
         # Force the column names
-        names(TempDataFrame) <- c("TTF", "Status", "Conditions", "Stress", "Temperature","Dimension")
+        names(TempDataFrame) <- c("TTF", "Status", "Conditions", "Stress", "Temperature","Area")
         # Store the data in the final table
         ResTable <- rbind(ResTable,TempDataFrame)
     }
 
     # Now that all the files have been opened, let's check if different sizes were used.
     # If yes, we will change the Condition sticker to include the area.
-    if (length(levels(factor(ResTable$Dimension))) > 1 ){
-        ResTable$Conditions <- paste(ResTable$Conditions,"/",ResTable$Dimension /1000, "k" , sep="")
+    if (length(levels(factor(ResTable$Area))) > 1 ){
+        ResTable$Conditions <- paste(ResTable$Conditions,"/",ResTable$Area /1000, "k" , sep="")
     }
 
     # Cleaning to remove units where status is not 1 or 0.
@@ -108,13 +108,13 @@ ReadDataTDDB <- function(ListFiles)
     for (condition in CondList){
 
         TempDataTable <- CreateDataFrame(ResTable$TTF[ResTable$Conditions==condition], ResTable$Status[ResTable$Conditions==condition],
-          ResTable$Condition[ResTable$Conditions==condition], ResTable$Stress[ResTable$Conditions==condition], ResTable$Temperature[ResTable$Conditions==condition], Scale="Weibull",ResTable$Dimension[ResTable$Conditions==condition])
+          ResTable$Condition[ResTable$Conditions==condition], ResTable$Stress[ResTable$Conditions==condition], ResTable$Temperature[ResTable$Conditions==condition], Scale="Weibull",ResTable$Area[ResTable$Conditions==condition])
 
         ExpDataTable <- rbind(ExpDataTable,TempDataTable)
     }
 
-    # We force the new names here as a security check.
-    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Dimension")
+    # We force the new names here as a security check. Area replace Dimension (Dimension is forced by CreateDataFrame)
+    names(ExpDataTable) <- c("TTF", "Status", "Probability", "Conditions", "Stress", "Temperature","Area")
     # Order the condition in numerical/alphabetical order
     ExpDataTable <- ExpDataTable[OrderConditions(ExpDataTable),]
     # Do the same for conditions levels
@@ -126,7 +126,7 @@ ReadDataTDDB <- function(ListFiles)
 }
 
 
-OxideLifetimeModelization <- function(DataTable,DeviceID)
+OxideLifetimeModelization <- function(DataTable, DeviceID)
 # Modelize the data using a TDDB lifetime model
 # Extract the parameters: t0, A and Ea
 # as well as the Weibull slope
@@ -134,43 +134,32 @@ OxideLifetimeModelization <- function(DataTable,DeviceID)
 #
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
 {
-
-    Area <- DataTable$Dimension * 1E-12 # m^2
-
     # Remove the units where status is 0
     CleanDataTable <- DataTable[DataTable$Status==1,]
+    # Modelization
+    Model <- ModelFit(CleanDataTable, Law="TDDB")
 
-    Model <- ModelFit(CleanDataTable, Area, Law="TDDB")
+    # List the number of different area used during tests.
+    ListArea <- levels(as.factor(CleanDataTable$Area))
 
-
-
-    # Using the parameters and the conditions, theoretical distributions are created
-    ListConditions <- levels(CleanDataTable$Conditions)
-
-    # Initialisation
+    # Table initialization
     ModelDataTable <- data.frame()
-    # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-    Proba <-  seq(log(-log(1-0.0001)),log(-log(1-0.9999)),0.05) # Weibit
 
-    for (Condition in ListConditions){
-        # Experimental conditions:
-        V <- CleanDataTable$Stress[CleanDataTable$Conditions==Condition][1]
-        Temp <- CleanDataTable$Temperature[CleanDataTable$Conditions==Condition][1]  # °C
-        Area <- CleanDataTable$Dimension[CleanDataTable$Conditions==Condition][1] * 1E-12 # m^2
-
-        # TTF calculation
-        TTF <- CalculLifeTime(Model, Area, V, Temp, Proba, Law = "TDDB")
-
-        # Dataframe creation
-        ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=V,'Temperature'=Temp))
+    # Model calculation for each area and for each condition.
+    for (area in ListArea){
+        ListConditions <- levels(CleanDataTable$Conditions[CleanDataTable$Area == area])
+        ModelDataTable <- rbind(ModelDataTable, CreateModelDataTable(Model, ListConditions, as.numeric(area), Law="TDDB", Scale="Weibull"))
     }
 
+    # if several length are used, stickers are adapted
+    if (length(ListArea) != 1){
+        ModelDataTable$Conditions <- paste(ModelDataTable$Conditions,"/", ModelDataTable$Area /1000, "k" , sep="")
+    }
 
+    # Display information about fit: parameters, goodness of fit...
     FitResultsDisplay(Model, DataTable, DeviceID)
 
-
     return(ModelDataTable)
-
 }
 
 
@@ -215,10 +204,10 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               # Check if the modelization is a succes
               if (class(ModelDataTable) != "try-error"){
                     ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
-                    CreateGraphProba(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Weibull",ErrorBand,Save)
+                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Weibull",ErrorBand,Save)
               } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                     ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
-                    CreateGraphProba(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
+                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
               }
           }
 
