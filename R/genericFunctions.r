@@ -48,6 +48,7 @@ library('scales')
 #library('grid')
 library('ggplot2')
 library('nlstools')
+library('tcltk')
 #################################
 
 ###### List of Constants  ######
@@ -431,6 +432,27 @@ Ranking <- function(TTF)
 {
     # ties.method="random" handles identical TTFs and provide a unique ID
     rk <- (rank(TTF, ties.method="random")-0.3)/(length(TTF)+0.4)
+}
+
+
+SelectFiles <- function()
+# Allow graphical selection of multiple files.
+# Return them as a list.
+{
+    # Create the Path.
+    # initFile is used to enter the right directory.
+    # initFile is removed before returning the list
+    initFile <- list.files(pattern="bidule.txt")
+    path2Current <- paste(getwd(), "/", initFile[1], sep="")
+
+    # Filters for file selection
+    Filters <- matrix(c("Text", ".txt", "All files", "*"),2, 2, byrow = TRUE)
+
+    # Gui for file selection
+    listFiles <- tk_choose.files(default = path2Current, caption = "Select files",
+                            multi = TRUE, filters = Filters, index = 1)
+
+    return(listFiles[-1])
 }
 
 
