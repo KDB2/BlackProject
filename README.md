@@ -38,6 +38,7 @@
 - [ ] Ficher's F-test to add to previous function.
 - [ ] Copy the structure file locally and make comparison with time stamps. Would allow working without network.
 - [ ] Find a way to store model in a file and directly call them. Avoid hard coding the models in the functions. Avoid redundancy (error prone). Ex: Black and TDDB lifetime.
+- [ ] plyr strategie (split apply combine) on data with multiple structures inside the table? 
 
 
 ## Chart:
