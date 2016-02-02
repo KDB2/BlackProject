@@ -446,7 +446,7 @@ SelectFiles <- function()
     path2Current <- paste(getwd(), "/", initFile[1], sep="")
 
     # Filters for file selection
-    Filters <- matrix(c("Text", ".txt", "All files", "*"),2, 2, byrow = TRUE)
+    Filters <- matrix(c("All files", "*", "Export Files", "*exportfile.txt", "Text", ".txt"),3, 2, byrow = TRUE)
 
     # Gui for file selection
     selection <- tk_choose.files(default = path2Current, caption = "Select files",
