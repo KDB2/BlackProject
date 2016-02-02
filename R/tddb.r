@@ -199,16 +199,22 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
           for (DeviceID in DeviceIDList){
               SubListFiles <- ListFiles[grep(DeviceID,ListFiles)]
               # Import the file(s) and create the 3 dataframes + display data
-              DataTable <- ReadDataTDDB(SubListFiles)
-              # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID),silent=TRUE)
-              # Check if the modelization is a succes
-              if (class(ModelDataTable) != "try-error"){
-                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
-                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Weibull",ErrorBand,Save)
-              } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
-                    ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
-                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
+              DataTable <- try(ReadDataTDDB(SubListFiles), silent=TRUE)
+
+              if (class(DataTable) != "try-error"){
+                  # Reading the file was ok.
+                  # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
+                  ModelDataTable <- try(OxideLifetimeModelization(DataTable, DeviceID),silent=TRUE)
+                  # Check if the modelization is a succes
+                  if (class(ModelDataTable) != "try-error"){
+                      ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
+                      CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Weibull",ErrorBand,Save)
+                  } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
+                      ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
+                      CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
+                  }
+              } else { # reading files returned an error
+                  print("Error detected in the file(s) you selected. Please check your selection.")
               }
           }
 

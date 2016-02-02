@@ -212,22 +212,29 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               SubListFiles <- ListFiles[grep(DeviceID,ListFiles)]
 
               # Import the file(s) and create the 3 dataframes + display data
-              DataTable <- ReadDataAce(SubListFiles)
-              # Try to import the area
-              if (class(AddArea(DataTable, DeviceID)) != "try-error" ){
-                  DataTable <- AddArea(DataTable, DeviceID)
-              }
+              DataTable <- try(ReadDataAce(SubListFiles), silent=TRUE)
 
-              # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-              ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
-              if (class(ModelDataTable) != "try-error"){
-                    ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-                    CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
+              if (class(DataTable) != "try-error"){
+                  # Reading the file was ok.
+                  # Try to import the area
+                  if (class(AddArea(DataTable, DeviceID)) != "try-error" ){
+                      DataTable <- AddArea(DataTable, DeviceID)
+                  }
 
-              # There was an error either with Area or with modelization, we go to fallback mode
-              } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
-                    ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
-                    CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+                  # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
+                  ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
+                  if (class(ModelDataTable) != "try-error"){
+                        ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
+                        CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Lognormal",ErrorBand,Save)
+
+                  # There was an error either with Area or with modelization, we go to fallback mode
+                  } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
+                        ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
+                        CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Lognormal",ErrorBand=FALSE,Save=FALSE)
+                  }
+
+              } else { # reading the files returned an error.
+                  print("Error detected in the file(s) you selected. Please check your selection.")
               }
           }
 
