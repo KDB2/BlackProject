@@ -42,15 +42,17 @@
 AddArea <- function(DataTable, DeviceID)
 # Retrive the area of an EM device and add it to the dataTable
 # Return the new dataTable if it succeeds.
-# Return the old one otherwise
+# Return an error otherwise
 {
+    # Create an error to return in case of need
+    errorMsg <- try(log("a"), silent=TRUE)
     # Read the list of device to retrieve the section parameters.
     ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
 
     #if file is not present, error is returned.
     if (class(ListDevice) == "try-error"){
         print("File //fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt not found.")
-        return(DataTable)
+        return(errorMsg)
     } else {
         W <- ListDevice$Width[ListDevice$Device==DeviceID] # micrometers
         H <- ListDevice$Height[ListDevice$Device==DeviceID] # micrometers
@@ -60,8 +62,7 @@ AddArea <- function(DataTable, DeviceID)
         if (is.na(Area) || Area <=0 || length(Area)==0) {
             print(paste("Structure",DeviceID, "is not present in the list. Please fill the list!"))
             # Force an error in the return for BlackAnalysis.
-            # Error <- try(log("-2"),silent=TRUE)
-            return(DataTable)
+            return(errorMsg)
         } else { # we proceed
             DataTable$Area <- Area
             return(DataTable)
@@ -213,7 +214,9 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
               # Import the file(s) and create the 3 dataframes + display data
               DataTable <- ReadDataAce(SubListFiles)
               # Try to import the area
-              DataTable <- AddArea(DataTable, DeviceID)
+              if (class(AddArea(DataTable, DeviceID)) != "try-error" ){
+                  DataTable <- AddArea(DataTable, DeviceID)
+              }
 
               # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
               ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
