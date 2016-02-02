@@ -441,8 +441,8 @@ SelectFiles <- function()
 {
     # Create the Path.
     # This path is used to enter the working directory directory.
-    # False file 'select a file' force the entry in the wd. 
-    path2Current <- paste(getwd(), "/", "Select a file", sep="")
+    # False file 'select a file' force the entry in the wd.
+    path2Current <- paste(getwd(), "/", "Select_a_file", sep="")
 
     # Filters for file selection
     Filters <- matrix(c("All files", "*", "Export Files", "*exportfile.txt", "Text", ".txt"),3, 2, byrow = TRUE)
@@ -451,12 +451,14 @@ SelectFiles <- function()
     selection <- tk_choose.files(default = path2Current, caption = "Select files",
                             multi = TRUE, filters = Filters, index = 1)
 
-    # Cleaning to remove the path and keep only the filename (last item)
-    if (Sys.info()[['sysname']] == "Windows"){
-        listFiles <- sapply(strsplit(selection,split="/"),function(x){x[length(x)]})
-    } else { # On  Linux, first file is removed as it is empty. Coming from path2Current
-        listFiles <- sapply(strsplit(selection[-1],split="/"),function(x){x[length(x)]})
+    if (Sys.info()[['sysname']] == "Linux"){
+        # On  Linux, first file is removed as it is empty. Coming from path2Current
+        selection <- selection[-1]
     }
+
+    # Cleaning to remove the path and keep only the filename (last item)
+    listFiles <- sapply(strsplit(selection, split="/"), function(x){x[length(x)]})
+
     # new working path
     newWD <- substr(selection[1], 1, nchar(selection[1])-nchar(listFiles[1]))
     setwd(newWD)
