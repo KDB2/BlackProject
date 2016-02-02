@@ -440,10 +440,9 @@ SelectFiles <- function()
 # Return them as a list.
 {
     # Create the Path.
-    # initFile is used to enter the right directory.
-    # initFile is removed before returning the list
-    initFile <- list.files(pattern="bidule.txt")
-    path2Current <- paste(getwd(), "/", initFile[1], sep="")
+    # This path is used to enter the working directory directory.
+    # False file 'select a file' force the entry in the wd. 
+    path2Current <- paste(getwd(), "/", "Select a file", sep="")
 
     # Filters for file selection
     Filters <- matrix(c("All files", "*", "Export Files", "*exportfile.txt", "Text", ".txt"),3, 2, byrow = TRUE)
@@ -454,14 +453,13 @@ SelectFiles <- function()
 
     # Cleaning to remove the path and keep only the filename (last item)
     if (Sys.info()[['sysname']] == "Windows"){
-        # List of file
         listFiles <- sapply(strsplit(selection,split="/"),function(x){x[length(x)]})
-        # new working path
-        newWD <- substr(selection[1], 1, nchar(selection[1])-nchar(listFiles[1]))
-        setwd(newWD)
-    } else {
+    } else { # On  Linux, first file is removed as it is empty. Coming from path2Current
         listFiles <- sapply(strsplit(selection[-1],split="/"),function(x){x[length(x)]})
     }
+    # new working path
+    newWD <- substr(selection[1], 1, nchar(selection[1])-nchar(listFiles[1]))
+    setwd(newWD)
 
     return(listFiles)
 }
