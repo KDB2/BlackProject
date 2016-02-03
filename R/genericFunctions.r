@@ -457,10 +457,11 @@ SelectFiles <- function()
     }
 
     # Cleaning to remove the path and keep only the filename (last item)
-    listFiles <- sapply(strsplit(selection, split="/"), function(x){x[length(x)]})
-
+    listFiles <- sapply(selection, basename)
+    # Rename to avoid ugly naming of the list
+    names(listFiles) <- rep("", length(listFiles))
     # new working path
-    newWD <- substr(selection[1], 1, nchar(selection[1])-nchar(listFiles[1]))
+    newWD <- dirname(selection[1])
     setwd(newWD)
 
     return(listFiles)
