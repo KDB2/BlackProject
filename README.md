@@ -38,6 +38,6 @@
   - [ ] Model parameters <- addressed with annotate + clipping off (2nd table)
   - [x] Minimum 3 decades per charts
   - [x] Revert renaming CreateGraph function.
-  - [ ] Create new option for y axis setting: deg scale or proba scale.
+  - [ ] Create new function for axis setting definition: deg scale or proba scale / linear or log scale
 
 ## Documentation:
