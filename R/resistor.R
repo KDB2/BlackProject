@@ -278,30 +278,15 @@ AnalyzeRes <- function(){
 
 }
 
-SelectFiles2 <- function()
-{
-    # This path is used to enter the working directory directory.
-    # False file 'select a file' force the entry in the wd.
-    path2Current <- paste(getwd(), "/", "Select_a_file", sep="")
-
-    # Filters for file selection
-    Filters <- matrix(c("All files", "*", "Export Files", "*exportfile.txt", "Text", ".txt"),3, 2, byrow = TRUE)
-
-    # Gui for file selection
-    selection <- tk_choose.files(default = path2Current, caption = "Select files",
-                            multi = TRUE, filters = Filters, index = 1)
-
-    return(selection)
-}
 
 StackResistorData <- function()
 {
 
 
     cat("Please select the result files of the first experiment\n")
-    firstExp <- SelectFiles2()
+    firstExp <- SelectFiles()
     cat("Please select the result files of the second experiment\n")
-    secondExp <- SelectFiles()
+    secondExp <- SelectFilesAdvanced()
 
     # Resulting Stacked files will be available in a subdirectory of the second selection
     dir.create("results")

@@ -462,6 +462,15 @@ SelectFiles <- function()
         selection <- selection[-1]
     }
 
+    return(selection)
+}
+
+SelectFilesAdvanced <- function()
+# Allow graphical selection of multiple files
+# Return the file name only
+# set the working directory to the directory where the file where selected.
+{
+    selection <- SelectFiles()
     # Cleaning to remove the path and keep only the filename (last item)
     listFiles <- sapply(selection, basename)
     # Rename to avoid ugly naming of the list
