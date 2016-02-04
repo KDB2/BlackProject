@@ -298,9 +298,9 @@ StackResistorData <- function()
 {
 
 
-    cat("Please select the result files of the first experiment")
+    cat("Please select the result files of the first experiment\n")
     firstExp <- SelectFiles2()
-    cat("Please select the result files of the second experiment")
+    cat("Please select the result files of the second experiment\n")
     secondExp <- SelectFiles()
 
     # Resulting Stacked files will be available in a subdirectory of the second selection
