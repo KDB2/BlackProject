@@ -277,3 +277,49 @@ AnalyzeRes <- function(){
     CreateGraphDeg(MedianDegTable,Title=title)
 
 }
+
+SelectFiles2 <- function()
+{
+    # This path is used to enter the working directory directory.
+    # False file 'select a file' force the entry in the wd.
+    path2Current <- paste(getwd(), "/", "Select_a_file", sep="")
+
+    # Filters for file selection
+    Filters <- matrix(c("All files", "*", "Export Files", "*exportfile.txt", "Text", ".txt"),3, 2, byrow = TRUE)
+
+    # Gui for file selection
+    selection <- tk_choose.files(default = path2Current, caption = "Select files",
+                            multi = TRUE, filters = Filters, index = 1)
+
+    return(selection)
+}
+
+StackResistorData <- function()
+{
+
+
+    cat("Please select the result files of the first experiment")
+    firstExp <- SelectFiles2()
+    cat("Please select the result files of the second experiment")
+    secondExp <- SelectFiles()
+
+    # Resulting Stacked files will be available in a subdirectory of the second selection
+    dir.create("results")
+
+    # Read the device dedicated file from MIRA for XP1 and XP2
+    for (i in seq_along(firstExp)){
+        fileXP1 <- read.delim(firstExp[i],sep="", header=FALSE)
+        fileXP2 <- read.delim(secondExp[i],sep="", header=FALSE)
+
+        # add final time XP1 to XP2
+        maxTempsXP1 <- fileXP1[length(fileXP1[,1]),1]
+        fileXP2[,1] <- fileXP2[,1] + maxTempsXP1
+
+        # Save the stacked files to a new file
+        fileName <- paste("results/", secondExp[i], sep="")
+        write.table(rbind(fileXP1,fileXP2), file = fileName, row.names=FALSE, col.names = FALSE)
+    }
+
+
+
+}
