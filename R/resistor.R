@@ -29,9 +29,6 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
 
     listFile2Read <- list.files(pattern="DEG2")
 
-    # Length of the files to read. All the same length as the XP are run on the same tool.
-    lengthFile2Read <- length(read.delim("DEG2.001",sep="", header=FALSE,na.strings="NA")[,1])
-
     #Read the setup condition from file Setup.txt
     setupConditions <- read.delim("Setup.txt")
 
@@ -62,6 +59,9 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
         # Experiment name with principal information
         ExpName <- paste(device,"EM",paste(temp,"C",sep=""),paste(stress,"mA",sep=""),sep="_")
 
+        # Length of the files to read. For each device, they have all the same length
+        # as the XP are run on the same tool.
+        lengthFile2Read <- length(read.delim(listFile2Read[indLow],sep="", header=FALSE,na.strings="NA")[,1])
         # Initialisation Main data
         resultTable <- data.frame()
         # Initialisation table used in mean degradation calculation
