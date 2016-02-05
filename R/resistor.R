@@ -30,7 +30,7 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
     listFile2Read <- list.files(pattern="DEG2")
 
     # Length of the files to read. All the same length as the XP are run on the same tool.
-    lengthFile2Read <- length(read.delim("DEG2.001",sep=" ", header=FALSE,na.strings="NA")[,1])
+    lengthFile2Read <- length(read.delim("DEG2.001",sep="", header=FALSE,na.strings="NA")[,1])
 
     #Read the setup condition from file Setup.txt
     setupConditions <- read.delim("Setup.txt")
@@ -73,20 +73,20 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
 
         for (j in indLow: indHigh){
             # Read the device dedicated file from MIRA
-            tempData <- read.delim(listFile2Read[j],sep=" ", header=FALSE,na.strings=c("NA","1.0000000E+12",1.0000000E+12))
+            tempData <- read.delim(listFile2Read[j],sep="", header=FALSE,na.strings=c("NA","1.0000000E+12",1.0000000E+12))
             # Retrive the initial resistance (before stress)
             refResistance <- tcrFile[tcrFile$Pkg == j ,5]
 
             # Check if unit was good. if yes, results are available
-            if (length(refResistance) != 0 && refResistance != 0 && !is.na(tempData[,4])){
+            if (length(refResistance) != 0 && refResistance != 0 && !is.na(tempData[,2])){
                 # DeltaR calculation
-                deltaR <- (tempData[,4] - refResistance)/refResistance
+                deltaR <- (tempData[,2] - refResistance)/refResistance
                 # Creation of the global result data.frame
                 tempTable <- data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= deviceRef,"Version"=1,"Cycle"=seq(1:length(tempData[,1])) ,
-                                        "Time"=tempData[,2],"R"=tempData[,4], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
+                                        "Time"=tempData[,1],"R"=tempData[,2], "DR"=deltaR, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width)
                 # same for DR table and R table.
                 DeltaRTable <- cbind(DeltaRTable,deltaR)
-                RTable <- cbind(RTable,tempData[,4])
+                RTable <- cbind(RTable,tempData[,2])
 
                 # Cleaning of Error code on main table
                 #tempTable <- tempTable[tempTable$R < 1E8, ]
@@ -109,7 +109,7 @@ ResistorExportFiles <- function(lot = "C18051", wafer = "W5")
 
         # add the median degradation as a device at the end of the main table
         resultTable <- rbind(resultTable, data.frame("XPName"=ExpName,"GroupName"=device,"DevName"= "Median","Version"=1,"Cycle"=seq(1:minLength),
-                    "Time"=tempData[1:minLength,2],"R"=medianR, "DR"=medianDeg, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width))
+                    "Time"=tempData[1:minLength,1],"R"=medianR, "DR"=medianDeg, "Stress"=stress, "Temp"=temp, "Length"=length, "Width"= width))
 
         # Save in a file
         cat("[DATA]\n", file=fileName)
@@ -286,7 +286,7 @@ StackResistorData <- function()
     cat("Please select the result files of the first experiment\n")
     firstExp <- SelectFiles()
     cat("Please select the result files of the second experiment\n")
-    secondExp <- SelectFilesAdvanced()
+    secondExp <- SelectFilesAdvanced() # working directory is moved to the second selection directory
 
     # Resulting Stacked files will be available in a subdirectory of the second selection
     dir.create("results")
