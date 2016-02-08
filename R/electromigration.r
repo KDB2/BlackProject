@@ -202,7 +202,10 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     options(warn = -1)
     #rm(list=ls())
     # ListFiles <- list.files(pattern="*exportfile.txt")
-    ListFiles <- SelectFilesAdvanced()
+
+    # Filters for file selection
+    Filters <- matrix(c("All files", "*", "Text", ".txt", "Export Files", "*exportfile.txt"),3, 2, byrow = TRUE)
+    ListFiles <- SelectFilesAdvanced(Filters)
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
           # List of DeviceID available in the selected exportfiles

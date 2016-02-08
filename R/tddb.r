@@ -189,7 +189,10 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     options(warn = -1)
     #rm(list=ls())
     # ListFiles <- list.files(pattern="k_T.*txt$")
-    ListFiles <- SelectFilesAdvanced()
+
+    # Filters for file selection
+    Filters <- matrix(c("All files", "*", "Text", ".txt"),2, 2, byrow = TRUE)
+    ListFiles <- SelectFilesAdvanced(Filters)
     #DeviceID <- strsplit(ListFiles[1],split="_")[[1]][2]
     # case 1, there are one or several files available
     if (length(ListFiles) != 0){
