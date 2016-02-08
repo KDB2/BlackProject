@@ -100,8 +100,6 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     # Probability vector used to draw y axis.
     ProbaNorm <- CalculProbability(ListeProba/100,Scale)
 
-
-
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
     CleanExpTable <- ExpDataTable[ExpDataTable$Status==1,]
@@ -109,8 +107,9 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
 
     # Graph creation with CleanTable
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
-    # box around chart + background
-    Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    # Add default options
+    Graph <- GraphBase(Graph, Title)
+
     # Definition of scales
     Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
@@ -118,9 +117,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
     Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
     Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
-    # Controled symbol list -- Max is 20 conditions on the chart.
-    Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
-    Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
+
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
     # Add the theoretical model
     Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
@@ -131,8 +128,25 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     }
     # Font size & x/y titles...
     Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
-    Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
-    Graph <- Graph + theme(axis.title.y = element_text(face="bold", size=16))
+
+    print(Graph)
+
+    # Save as png or pdf
+    if (Save == TRUE){
+        GraphSave(Title, Extension ="png")
+    }
+}
+
+
+GraphBase <- function(Graph, Title)
+# Add default parameters to a graph
+# background, legend, shape and color of points
+{
+    # box around chart + background
+    Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    # Controled symbol list -- Max is 20 conditions on the chart.
+    Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
+    Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
     # legend size
     Graph <- Graph + theme(legend.title = element_text(size=14, face="bold"))
     Graph <- Graph + theme(legend.text = element_text(size = 12))
@@ -148,17 +162,21 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     # Add a title
     Graph <- Graph + ggtitle(Title)
     Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
+    # Font size & x/y titles...
+    Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
+    Graph <- Graph + theme(axis.title.y = element_text(face="bold", size=16))
 
-    print(Graph)
+    return(Graph)
+}
 
-    # Save as png & pdf
-    if (Save == TRUE){
-        if (Title != ""){
-            ggsave(filename=paste(Title,"png",sep="."),dpi=300)
-            #ggsave(filename=paste(Title,"pdf",sep="."))
-        } else {
-            ggsave(filename="Chart.png",dpi=300)
-            #ggsave(filename="Chart.pdf")
-        }
+GraphSave <- function(Title, Extension="png")
+# Save a graph
+{
+    if (Title != ""){
+        ggsave(filename=paste(Title, Extension ,sep="."),dpi=300)
+        #ggsave(filename=paste(Title,"pdf",sep="."))
+    } else {
+        ggsave(filename=paste("Chart", Extension, sep="."),dpi=300)
+        #ggsave(filename="Chart.pdf")
     }
 }
