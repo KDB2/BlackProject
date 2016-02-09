@@ -194,3 +194,29 @@ GraphTargetLines <- function(Graph, x=NULL, y=NULL, Colorx="red", Typex = 2, Col
 
     return(Graph)
 }
+
+ExtractLimits <- function(Data, minDecades=3)
+# Return the limits of the Data
+#  Add necessary decades to follow the minimal number of decades requested.
+{
+    lim <- range(Data) # Min of the values is stored in [1] and max in  [2]
+    lim.high <- 10^(ceiling(log(lim[2],10)))
+    lim.low <- 10^(floor(log(lim[1],10)))
+
+    nbDecades <- log10(lim.high) - log10(lim.low)
+    diff <- minDecades - nbDecades
+
+    # In case the number of minimal decades is not reached, we add decades at both ends
+    if ( nbDecades < minDecades ) {
+        # We estimate where the data are closer to the edge in order to add the aditional decade on this side.
+        # (Odd case)
+        if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){ # additional decade on the left.
+            lim.low <- lim.low / 10^(diff %/% 2 + diff %% 2)
+            lim.high <- lim.high * 10^(diff %/% 2)
+        } else { # aditional decade on the right
+            lim.low <- lim.low / 10^(diff %/% 2 )
+            lim.high <- lim.high * 10^(diff %/% 2 + diff %% 2)
+        }
+    }
+    return(c(lim.low, lim.high))
+}
