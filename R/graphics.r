@@ -180,3 +180,17 @@ GraphSave <- function(Title, Extension="png")
         #ggsave(filename="Chart.pdf")
     }
 }
+
+GraphTargetLines <- function(Graph, x=NULL, y=NULL, Colorx="red", Typex = 2, Colory="red", Typey = 2)
+# Add target lines to a graph
+{
+    if (!is.null(x) & is.numeric(x)){
+        Graph <- Graph + geom_vline(xintercept = x, color = Colorx, linetype = Typex)
+    }
+
+    if (!is.null(y) & is.numeric(x)){
+        Graph <- Graph + geom_hline(xintercept = y, color = Colory, linetype = Typey)
+    }
+
+    return(Graph)
+}
