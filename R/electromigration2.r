@@ -21,39 +21,21 @@ CompareEMLifeTime <- function()
     # Parent Path
     ParentPath <- getwd()
 
-    # # Read the child data, before goinf to the mother wd
-    # ListFilesChild <- list.files(pattern="*exportfile.txt")
-    # DeviceIDChild <- sapply(ListFilesChild,function(x){strsplit(x,split="_")[[1]][2]})
-    # DataTableChild <- ReadDataAce(ListFilesChild)
-    # DataTableChild <- AddArea(DataTableChild, DeviceIDChild)
-
-
-    # Extract mean lifetime for Mother Structure and for child structure.
-    MTTFmother <- CalculLifeTime(Model=ModelMother, Area=DataTableMother$Area[1], Stress=DataTableChild$Stress[1], Temperature=DataTableChild$Temperature[1], Probability=0,  Law="BlackLaw")
-
-    fit <- fitdistr(DataTableChild$TTF[DataTableChild$Status==1],"lognormal")
-    MTTFchild <- as.numeric(exp(fit$estimate[1]))  # meanlog
-    ScaleChild <- as.numeric(fit$estimate[2])  # sdlog
-
-    lifetimeRatio <- MTTFchild / MTTFmother
-    print(paste("Lifetime ratio:", lifetimeRatio, sep=' '))
-
     # DataFrame creation for plot
     cond <- as.character(DataTableChild$Conditions[1])
     DataTableChild$Conditions <- as.factor(DeviceIDChild)
 
     SubDataTableMother <- DataTableMother[DataTableMother$Conditions == cond,]
     SubDataTableMother$Conditions <- as.factor(RefDeviceID)
-    # SubDataTableMother <- droplevels(SubDataTableMother)
 
     DataTable <- rbind(SubDataTableMother, DataTableChild)
 
     # Model DataFrame
-    # Model Child
+    # Child
     ModelTableChild <- FitDistribution(DataTableChild, Scale="Lognormal")
     ModelTableChild <- AddArea(ModelTableChild, DeviceIDChild)
     ModelTableChild$Conditions <- DeviceIDChild
-    # Model Mother
+    #  Mother
     ModelTableMother <- CreateModelDataTable(ModelMother, ListConditions=cond, Area=DataTableMother$Area[1], Law="BlackLaw", Scale="Lognormal")
     ModelTableMother$Conditions <- RefDeviceID
 
@@ -63,8 +45,28 @@ CompareEMLifeTime <- function()
     ErrorTable <- ErrorEstimation(SubDataTableMother, ModelTableMother, ConfidenceValue=0.95, Scale="Lognormal")
     ErrorTable$Conditions <- RefDeviceID
 
+    # Graph
     CreateGraph(DataTable, ModelDataTable, ErrorTable, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=FALSE)
+    # Lifetime ratio
+    lifetimeRatio <- MeanLifetimeRatio(ModelTableMother$TTF, DataTableChild$TTF[DataTableChild$Status==1], Scale="lognormal")
+    print(paste("Mean lifetime ratio:", lifetimeRatio, sep=' '))
 
     # back to Child WD
     setwd(childWdPath)
+}
+
+
+MeanLifetimeRatio <- function(DataRef, DataComparison, Scale="lognormal")
+# Provide the ratio for the caracteristic TTF (50% or 63%) for 2 populations
+{
+    if (Scale == "Weibull"){
+        fitRef <- fitdistr(DataRef,"weibull")
+        fitComp <- fitdistr(DataComparison,"weibull")
+        ratio <- as.numeric( exp(fitComp$estimate[2])/exp(fitRef$estimate[2]) )
+    } else {
+        fitRef <- fitdistr(DataRef,"lognormal")
+        fitComp <- fitdistr(DataComparison,"lognormal")
+        ratio <- as.numeric( exp(fitComp$estimate[1])/exp(fitRef$estimate[1]) )
+    }
+    return(ratio)
 }
