@@ -82,7 +82,7 @@ CalculLifeTime <- function(Model, Area, Stress, Temperature, Probability,  Law="
         TTF <- exp(t0)*exp(-g*Stress)*exp((Ea*e)/(k*(Temperature+273.15)))*(Area*1E-12)^(-1/beta)*exp(Probability/beta)
 
     }
-    return(TTF)
+    return(as.numeric(TTF))
 }
 
 
