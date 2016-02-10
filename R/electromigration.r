@@ -152,7 +152,7 @@ BlackModelization <- function(DataTable, DeviceID)
 # as well as the lognormal slope
 # TTF = A j^(-n) exp(Ea/kT + Scale * Proba)
 # Proba in standard deviations
-# Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
+# Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension, Area)
 {
     # Remove the units where status is 0
     CleanDataTable <- DataTable[DataTable$Status==1,]
