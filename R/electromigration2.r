@@ -46,7 +46,7 @@ CompareEMLifeTime <- function()
     SubDataTableMother$Conditions <- as.factor(RefDeviceID)
     # SubDataTableMother <- droplevels(SubDataTableMother)
 
-    DataTable <- rbind(DataTableChild, SubDataTableMother)
+    DataTable <- rbind(SubDataTableMother, DataTableChild)
 
     # Model DataFrame
     # Model Child
@@ -67,5 +67,4 @@ CompareEMLifeTime <- function()
 
     # back to Child WD
     setwd(childWdPath)
-
 }
