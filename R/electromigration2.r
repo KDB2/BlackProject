@@ -12,7 +12,7 @@ CompareEMLifeTime <- function()
     childWdPath <- getwd()
 
     # Child Data
-    cat("Please select the data of the reference structure\n")
+    cat("Please select the reference data\n")
     ListFilesMother <- SelectFilesAdvanced(Filters)
     DataTableMother <- ReadDataAce(ListFilesMother)
     RefDeviceID <- sapply(ListFilesMother[1],function(x){strsplit(x,split="_")[[1]][2]})
