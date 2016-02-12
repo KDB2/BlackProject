@@ -18,7 +18,7 @@
 - [ ] Compare datacruncher results with amsRel for TDDB.
 
 #### Common:
-- [ ] Robust modelisation: fit 1 followed by a study on outliners leading to a second fit (Cook's distance).
+- [ ] Robust modelisation: fit 1 followed by a study on outliners leading to a second fit (Cook's distance). see nlrob (robustbase)
 - [ ] Implement hierachical models (mixed effect models) to check if they can be useful for self heating interference.
 - [ ] Force fit option: avoid fitting again if the parameters are available
 - [ ] Implement Kaplan-Meier and Exponential Greenwood Confidence Intervals
