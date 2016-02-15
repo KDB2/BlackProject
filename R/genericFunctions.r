@@ -398,13 +398,3 @@ OrderConditions <- function(DataTable)
     }
     return(VecIndices)
 }
-
-
-ReliabilityAnalysis <- function()
-# Wrapper to call all the available analyses of amsReliability
-{
-    cat("Welcome in amsReliability!\n")
-    cat(paste("You are currently using amsReliability version", packageVersion("amsReliability"), "\n\n", sep=' '))
-    cat("Please select the analysis you want to perform:")
-
-}
