@@ -346,3 +346,21 @@ BlackModelization.me <- function(DataTable, DeviceID)
         }
     }
 }
+
+
+AdjustCensor <- function(DataTable)
+# Adjust the censoring level
+# Handle case where some unfailed samples have a lower TTF than finished ones.
+# Return the DataTable with adjusted status
+# DataTable(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension)
+{
+    # List of available conditions
+    listConditions <- levels(as.factor(DataTable$Conditions))
+
+    for (cond in listConditions){
+        minTimeOngoingSample <- min(DataTable$TTF[DataTable$Status==0 & DataTable$Conditions == cond])
+        DataTable$Status[DataTable$Status==1 & DataTable$TTF > minTimeOngoingSample & DataTable$Conditions == cond] <- 0
+    }
+
+    return(DataTable)
+}
