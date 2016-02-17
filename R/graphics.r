@@ -37,7 +37,7 @@
 ################################################################################
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default is Lonormale scale but Weibull is available as an option.
 {
@@ -106,13 +106,17 @@ CreateGraph <- function(ExpDataTable, ModelDataTable, ConfidenceDataTable, Title
     Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
 
     Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
+
     # Add the theoretical model
-    Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
+    if (!is.null(ModelDataTable)){
+        Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
+    }
     # Add the confidence intervals
-    if (ErrorBands==TRUE) {
+    if (!is.null(ConfidenceDataTable) & ErrorBands==TRUE) {
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     }
+    
     # Font size & x/y titles...
     Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
 
