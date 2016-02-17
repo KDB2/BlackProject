@@ -37,9 +37,10 @@
 ################################################################################
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scalex = "Log", Scaley="Lognormal", ErrorBands=TRUE, Save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
-# Default is Lonormale scale but Weibull is available as an option.
+# Default y scale is Lonormale scale but Weibull and degradation (%) are available as an option.
+# Default x scale is log but linear (lin) is available in option.
 {
     # x scale limits calculation based on the data.
     lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=3)
@@ -69,7 +70,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     # Minimal proba is 0.01 %
 
     # Case 0: Proba min is above 1%
-    if (Scale == "Weibull"){ # Weibull requires 63% and details in low %
+    if (Scaley == "Weibull"){ # Weibull requires 63% and details in low %
         ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
     } else { # Lognormal scale is symetric.
         ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
@@ -77,15 +78,15 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 
     MinProba <- min(ExpDataTable$Probability)
 
-    if (MinProba <= CalculProbability(1/100,Scale)){ # Case 1: lower than 1%
+    if (MinProba <= CalculProbability(1/100,Scaley)){ # Case 1: lower than 1%
         ListeProba <- c(0.1,ListeProba, 99.9)
     }
-    if (MinProba <= CalculProbability(0.1/100,Scale)){ # Case 2: lower than 0.1%
+    if (MinProba <= CalculProbability(0.1/100,Scaley)){ # Case 2: lower than 0.1%
         ListeProba <- c(0.01,ListeProba, 99.99)
     }
 
     # Probability vector used to draw y axis.
-    ProbaNorm <- CalculProbability(ListeProba/100,Scale)
+    ProbaNorm <- CalculProbability(ListeProba/100,Scaley)
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
@@ -98,7 +99,8 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     Graph <- GraphBase(Graph, Title)
 
     # Definition of scales
-    Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
+    # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     # Grid definitions
     Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
@@ -116,7 +118,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     }
-    
+
     # Font size & x/y titles...
     Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
 
@@ -160,6 +162,7 @@ GraphBase <- function(Graph, Title)
     return(Graph)
 }
 
+
 GraphSave <- function(Title, Extension="png")
 # Save a graph
 {
@@ -171,6 +174,7 @@ GraphSave <- function(Title, Extension="png")
         #ggsave(filename="Chart.pdf")
     }
 }
+
 
 GraphTargetLines <- function(Graph, x=NULL, y=NULL, Colorx="red", Typex = 2, Colory="red", Typey = 2)
 # Add target lines to a graph
@@ -185,6 +189,7 @@ GraphTargetLines <- function(Graph, x=NULL, y=NULL, Colorx="red", Typex = 2, Col
 
     return(Graph)
 }
+
 
 ExtractLimits <- function(Data, minDecades=3)
 # Return the limits of the Data
@@ -210,4 +215,46 @@ ExtractLimits <- function(Data, minDecades=3)
         }
     }
     return(c(lim.low, lim.high))
+}
+
+
+CreateScale.x <- function(Graph, Data, Scale = "Log")
+{
+    if (Scale == "Lin")
+    {
+        scaleLimits <- ExtractLimits(Data, minDecades=1)
+        lim.low <- scaleLimits[1]
+        lim.high <- scaleLimits[2]
+        Graph <- Graph + scale_x_continuous(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    } else { # log scale
+        scaleLimits <- ExtractLimits(Data, minDecades=3)
+        lim.low <- scaleLimits[1]
+        lim.high <- scaleLimits[2]
+        # Now that we have the limits, we create the graph labels for x axis.
+        GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
+
+        # Now we create the minor ticks
+        ind.lim.high <- log10(lim.high)
+        ind.lim.low <- log10(lim.low)
+        MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
+
+        # Function used to calculate the distance between ticks for logscale. See line 166:
+        # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+        faceplant1 <- function(x) {
+            return (c(x[1]*10^.25, x[2]/10^.25))
+        }
+
+        faceplant2 <- function(x) {
+            return (MinorTicks)
+        }
+
+        Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = GraphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    }
+    return(Graph)
+}
+
+
+CreateScale.y <- function()
+{
+
 }
