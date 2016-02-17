@@ -180,7 +180,7 @@ OxideLifetimeModelization <- function(DataTable, DeviceID)
 #' OxideTDDB()
 #' OxideTDDB(ErrorBand=FALSE)
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
-#' @import ggplot2 MASS scales grid nlstools
+#' @import ggplot2 MASS scales nlstools tcltk
 #' @export
 OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
 {

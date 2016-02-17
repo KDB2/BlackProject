@@ -193,7 +193,7 @@ BlackModelization <- function(DataTable, DeviceID)
 #' BlackAnalysis()
 #' BlackAnalysis(ErrorBand=FALSE)
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
-#' @import ggplot2 MASS scales grid nlstools
+#' @import ggplot2 MASS scales nlstools tcltk
 #' @export
 BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
 {
