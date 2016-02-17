@@ -1,3 +1,4 @@
+
 ReliabilityAnalysis <- function()
 # Wrapper to call all the available analyses of amsReliability
 {
@@ -5,6 +6,7 @@ ReliabilityAnalysis <- function()
 
     cat("Please select the analysis you want to perform:\n-----------------------------------------------\n\n")
     cat(" 1) Electromigration\n 2) TDDB\n 3) Quit\n\n")
+    clc()
     userChoice <- readline(prompt="Enter your choice: ")
 
     if (userChoice == 1){
@@ -44,7 +46,8 @@ ReliabilityAnalysis <- function()
 clc <- function()
 # Clear screen function for terminal
 {
-    return(cat("\014"))
+    return(cat("\n\n\n\n\n\n"))
+    # return(cat("\014"))
 }
 
 amsRelHeader <- function()
