@@ -44,25 +44,25 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 {
     # x scale limits calculation based on the data.
     lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=3)
-    lim.low <- lim[1]
-    lim.high <- lim[2]
-
-    # Now that we have the limits, we create the graph labels for x axis.
-    GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
-    # Now we create the minor ticks
-    ind.lim.high <- log10(lim.high)
-    ind.lim.low <- log10(lim.low)
-    MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
-
-    # Function used to calculate the distance between ticks for logscale. See line 166:
-    # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    faceplant1 <- function(x) {
-        return (c(x[1]*10^.25, x[2]/10^.25))
-    }
-
-    faceplant2 <- function(x) {
-        return (MinorTicks)
-    }
+    # lim.low <- lim[1]
+    # lim.high <- lim[2]
+    #
+    # # Now that we have the limits, we create the graph labels for x axis.
+    # GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
+    # # Now we create the minor ticks
+    # ind.lim.high <- log10(lim.high)
+    # ind.lim.low <- log10(lim.low)
+    # MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
+    #
+    # # Function used to calculate the distance between ticks for logscale. See line 166:
+    # # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    # faceplant1 <- function(x) {
+    #     return (c(x[1]*10^.25, x[2]/10^.25))
+    # }
+    #
+    # faceplant2 <- function(x) {
+    #     return (MinorTicks)
+    # }
     #############################
 
     # Label for y axis
@@ -99,7 +99,8 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     Graph <- GraphBase(Graph, Title)
 
     # Definition of scales
-    Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
+    #Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
+    Graph <- CreateAxisLog(Graph, scaleLimits = lim, axis = "x")
     # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     # Grid definitions
@@ -257,4 +258,35 @@ CreateScale.x <- function(Graph, Data, Scale = "Log")
 CreateScale.y <- function()
 {
 
+}
+
+
+CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
+# Create a log axis.
+# Limits <- c(lim.low, lim.high)
+# axis: x or y
+{
+    lim.low <- scaleLimits[1]
+    lim.high <- scaleLimits[2]
+    graphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
+
+    # Now we create the minor ticks
+    minorTicks <- rep(seq(1,9), log10(lim.high) - log10(lim.low) ) * rep(10^seq(log10(lim.low), log10(lim.high)-1), each=9)
+
+    # Function used to calculate the distance between ticks for logscale. See line 166:
+    # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
+    faceplant1 <- function(x) {
+        return (c(x[1]*10^.25, x[2]/10^.25))
+    }
+
+    faceplant2 <- function(x) {
+        return (minorTicks)
+    }
+
+    if (axis == "x"){
+        Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+    } else if (axis == "y"){
+        Graph <- Graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+    }
+    return(Graph)
 }
