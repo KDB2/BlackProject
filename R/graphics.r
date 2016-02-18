@@ -43,7 +43,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 # Default x scale is log but linear (lin) is available in option.
 {
     # x scale limits calculation based on the data.
-    lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=3)
+    lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=1)
     # lim.low <- lim[1]
     # lim.high <- lim[2]
     #
@@ -101,6 +101,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     # Definition of scales
     #Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
     Graph <- CreateAxisLog(Graph, scaleLimits = lim, axis = "x")
+    #Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
     # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
     Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     # Grid definitions
@@ -108,7 +109,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
     Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
 
-    Graph <- Graph + geom_point(size=4)+annotation_logticks(sides='tb')
+    Graph <- Graph + geom_point(size=4)#+annotation_logticks(sides='tb')
 
     # Add the theoretical model
     if (!is.null(ModelDataTable)){
@@ -287,6 +288,25 @@ CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
         Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
     } else if (axis == "y"){
         Graph <- Graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+    }
+    return(Graph)
+}
+
+CreateAxisLin <- function(Graph, scaleLimits, axis = "x")
+# Create a log axis.
+# Limits <- c(lim.low, lim.high)
+# axis: x or y
+{
+    lim.low <- scaleLimits[1]
+    lim.high <- scaleLimits[2]
+
+
+    if (axis == "x"){
+        Graph <- Graph + scale_x_continuous(limits = c(lim.low,lim.high), breaks = waiver(), labels = waiver(), minor_breaks= waiver())
+        Graph <- Graph + annotation_logticks(sides='tb')
+    } else if (axis == "y"){
+        Graph <- Graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+        Graph <- Graph + annotation_logticks(sides='lr')
     }
     return(Graph)
 }
