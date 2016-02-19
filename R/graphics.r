@@ -37,7 +37,7 @@
 ################################################################################
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, title="", axisTitles = c("",""), scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull and degradation (%) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
@@ -51,10 +51,11 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     CleanExpTable <- ExpDataTable[ExpDataTable$Status==1,]
     CleanExpTable <- CleanExpTable[order(CleanExpTable$"Conditions"),]
 
+    a <-"TTF"
     # Graph creation with CleanTable
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
     # Add default options
-    Graph <- GraphBase(Graph, Title)
+    Graph <- GraphBase(Graph, title)
     Graph <- AddThemeAxis(Graph, scale.x, scale.y)
     # Definition of scales
 
@@ -74,13 +75,14 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     }
 
     # Font size & x/y titles...
-    Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
+    # Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
+    Graph <- Graph + xlab(axisTitles[1]) + ylab(axisTitles[2])
 
     print(Graph)
 
     # Save as png or pdf
     if (save == TRUE){
-        GraphSave(Title, extension ="png")
+        GraphSave(title, extension ="png")
     }
 }
 
@@ -129,10 +131,8 @@ GraphSave <- function(title, extension="png")
 {
     if (title != ""){
         ggsave(filename=paste(title, extension ,sep="."),dpi=300)
-        #ggsave(filename=paste(Title,"pdf",sep="."))
     } else {
         ggsave(filename=paste("Chart", extension, sep="."),dpi=300)
-        #ggsave(filename="Chart.pdf")
     }
 }
 
@@ -261,6 +261,7 @@ CreateAxisLognormal <- function(graph, minProba, axis = "y")
 
     return(graph)
 }
+
 
 AddThemeAxis <- function(graph, scale.x = "Log", scale.y="Lognormal" )
 # Label/ticks size
