@@ -37,7 +37,7 @@
 ################################################################################
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scalex = "Log", Scaley="Lognormal", ErrorBands=TRUE, Save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scale.x = "Log", Scale.y="Lognormal", ErrorBands=TRUE, Save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull and degradation (%) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
@@ -45,28 +45,6 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     # x scale limits calculation based on the data.
     lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=1)
     probaMin <- min(ExpDataTable$Probability)
-    # Label for y axis
-    # Dynamique labels as a function of the minimal probability observed.
-    # Minimal proba is 0.01 %
-
-    # # Case 0: Proba min is above 1%
-    # if (Scaley == "Weibull"){ # Weibull requires 63% and details in low %
-    #     ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
-    # } else { # Lognormal scale is symetric.
-    #     ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
-    # }
-    #
-    # MinProba <- min(ExpDataTable$Probability)
-    #
-    # if (MinProba <= CalculProbability(1/100,Scaley)){ # Case 1: lower than 1%
-    #     ListeProba <- c(0.1,ListeProba, 99.9)
-    # }
-    # if (MinProba <= CalculProbability(0.1/100,Scaley)){ # Case 2: lower than 0.1%
-    #     ListeProba <- c(0.01,ListeProba, 99.99)
-    # }
-    #
-    # # Probability vector used to draw y axis.
-    # ProbaNorm <- CalculProbability(ListeProba/100,Scaley)
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
@@ -114,71 +92,71 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 }
 
 
-GraphBase <- function(Graph, Title)
+GraphBase <- function(graph, title)
 # Add default parameters to a graph
 # background, legend, shape and color of points
 {
     # box around chart + background
-    Graph <- Graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
+    graph <- graph + theme_linedraw() + theme(panel.background = element_rect(fill="gray90", color="black"))
     # Controled symbol list -- Max is 20 conditions on the chart.
-    Graph <- Graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
-    Graph <- Graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
+    graph <- graph + scale_shape_manual(values=c(19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16,19,15,17,16))
+    graph <- graph + scale_colour_manual(values = c("#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd","#66a61e","#f46d43","#e6ab02","#8073ac","#a6761d","#666666","#bc80bd","#d53e4f","#3288bd")) # "#5e4fa2" ,"#66c2a5", "#fec44f",
     # legend size
-    Graph <- Graph + theme(legend.title = element_text(size=14, face="bold"))
-    Graph <- Graph + theme(legend.text = element_text(size = 12))
+    graph <- graph + theme(legend.title = element_text(size=14, face="bold"))
+    graph <- graph + theme(legend.text = element_text(size = 12))
     # Box around legend
-    Graph <- Graph + theme(legend.background = element_rect())
-    Graph <- Graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
+    graph <- graph + theme(legend.background = element_rect())
+    graph <- graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
     #Box around the conditions in legend
-    Graph <- Graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
+    graph <- graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
     # Label/ticks size
-    Graph <- Graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
-    Graph <- Graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
-    Graph <- Graph + theme(axis.ticks.length = unit(-0.25, "cm"))#, axis.ticks.margin = unit(0.4, "cm")) #Depreciated see margin above.
+    graph <- graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
+    graph <- graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    graph <- graph + theme(axis.ticks.length = unit(-0.25, "cm"))#, axis.ticks.margin = unit(0.4, "cm")) #Depreciated see margin above.
     # Add a title
-    Graph <- Graph + ggtitle(Title)
-    Graph <- Graph + theme(plot.title = element_text(face="bold", size=18))
+    graph <- graph + ggtitle(title)
+    graph <- graph + theme(plot.title = element_text(face="bold", size=18))
     # Font size & x/y titles...
-    Graph <- Graph + theme(axis.title.x = element_text(face="bold", size=16))
-    Graph <- Graph + theme(axis.title.y = element_text(face="bold", size=16))
+    graph <- graph + theme(axis.title.x = element_text(face="bold", size=16))
+    graph <- graph + theme(axis.title.y = element_text(face="bold", size=16))
 
-    return(Graph)
+    return(graph)
 }
 
 
-GraphSave <- function(Title, Extension="png")
+GraphSave <- function(title, extension="png")
 # Save a graph
 {
-    if (Title != ""){
-        ggsave(filename=paste(Title, Extension ,sep="."),dpi=300)
+    if (title != ""){
+        ggsave(filename=paste(title, extension ,sep="."),dpi=300)
         #ggsave(filename=paste(Title,"pdf",sep="."))
     } else {
-        ggsave(filename=paste("Chart", Extension, sep="."),dpi=300)
+        ggsave(filename=paste("Chart", extension, sep="."),dpi=300)
         #ggsave(filename="Chart.pdf")
     }
 }
 
 
-GraphTargetLines <- function(Graph, x=NULL, y=NULL, Colorx="red", Typex = 2, Colory="red", Typey = 2)
+GraphTargetLines <- function(graph, x=NULL, y=NULL, colorx="red", typex = 2, colory="red", typey = 2)
 # Add target lines to a graph
 {
     if (!is.null(x) & is.numeric(x)){
-        Graph <- Graph + geom_vline(xintercept = x, color = Colorx, linetype = Typex)
+        graph <- graph + geom_vline(xintercept = x, color = colorx, linetype = typex)
     }
 
     if (!is.null(y) & is.numeric(x)){
-        Graph <- Graph + geom_hline(xintercept = y, color = Colory, linetype = Typey)
+        graph <- graph + geom_hline(xintercept = y, color = colory, linetype = typey)
     }
 
-    return(Graph)
+    return(graph)
 }
 
 
-ExtractLimits <- function(Data, minDecades=3)
+ExtractLimits <- function(data, minDecades=3)
 # Return the limits of the Data
 #  Add necessary decades to follow the minimal number of decades requested.
 {
-    lim <- range(Data) # Min of the values is stored in [1] and max in  [2]
+    lim <- range(data) # Min of the values is stored in [1] and max in  [2]
     lim.high <- 10^(ceiling(log(lim[2],10)))
     lim.low <- 10^(floor(log(lim[1],10)))
 
@@ -201,43 +179,7 @@ ExtractLimits <- function(Data, minDecades=3)
 }
 
 
-CreateScale.x <- function(Graph, Data, Scale = "Log")
-{
-    if (Scale == "Lin")
-    {
-        scaleLimits <- ExtractLimits(Data, minDecades=1)
-        lim.low <- scaleLimits[1]
-        lim.high <- scaleLimits[2]
-        Graph <- Graph + scale_x_continuous(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    } else { # log scale
-        scaleLimits <- ExtractLimits(Data, minDecades=3)
-        lim.low <- scaleLimits[1]
-        lim.high <- scaleLimits[2]
-        # Now that we have the limits, we create the graph labels for x axis.
-        GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
-
-        # Now we create the minor ticks
-        ind.lim.high <- log10(lim.high)
-        ind.lim.low <- log10(lim.low)
-        MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
-
-        # Function used to calculate the distance between ticks for logscale. See line 166:
-        # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-        faceplant1 <- function(x) {
-            return (c(x[1]*10^.25, x[2]/10^.25))
-        }
-
-        faceplant2 <- function(x) {
-            return (MinorTicks)
-        }
-
-        Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = GraphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    }
-    return(Graph)
-}
-
-
-CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
+CreateAxisLog <- function(graph, scaleLimits, axis = "x")
 # Create a log axis.
 # Limits <- c(lim.low, lim.high)
 # axis: x or y
@@ -260,14 +202,14 @@ CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
     }
 
     if (axis == "x"){
-        Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+        graph <- graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
     } else if (axis == "y"){
-        Graph <- Graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+        graph <- graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
     }
-    return(Graph)
+    return(graph)
 }
 
-CreateAxisLin <- function(Graph, scaleLimits, axis = "x")
+CreateAxisLin <- function(graph, scaleLimits, axis = "x")
 # Create a lin axis.
 # Limits <- c(lim.low, lim.high) # Not used in the current implementation
 # axis: x or y
@@ -276,37 +218,46 @@ CreateAxisLin <- function(Graph, scaleLimits, axis = "x")
     lim.high <- scaleLimits[2]
 
     if (axis == "x"){
-        Graph <- Graph + scale_x_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
+        graph <- graph + scale_x_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
 
     } else if (axis == "y"){
-        Graph <- Graph + scale_y_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
+        graph <- graph + scale_y_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
     }
-    return(Graph)
+    return(graph)
 }
 
-CreateAxisWeibull <- function(Graph, minProba)
+CreateAxisWeibull <- function(graph, minProba, axis = "y")
 # Create a Weibull scale on axis y
 # minProba defines the minimal probability being displayed.
 # minProba is given in weibit
 {
     minProba.ind <- min(0, floor(log10( (1-exp(-exp( minProba)))  *100)))
-    ListeProba <- c( 10^seq(minProba.ind,0),2,3,5,10,20,30,40,50,63,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
-    ProbaNorm <- CalculProbability(ListeProba/100,"Weibull")
+    listeProba <- c( 10^seq(minProba.ind,0),2,3,5,10,20,30,40,50,63,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
+    probaNorm <- CalculProbability(ListeProba/100,"Weibull")
 
-    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
-    return(Graph)
+    if (axis == "x"){
+        graph <- graph + scale_x_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
+    } else if (axis == "y"){
+        graph <- graph + scale_y_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
+    }
+    return(graph)
 }
 
 
-CreateAxisLognormal <- function(Graph, minProba)
+CreateAxisLognormal <- function(graph, minProba, axis = "y")
 # Create a lognormal scale on axis y
 # minProba defines the minimal probability being displayed.
 # minProba is given in standard deviations.
 {
     minProba.ind <- min(0, floor(log10(pnorm(minProba)*100)))
-    ListeProba <- c( 10^seq(minProba.ind,0),5,10,20,30,40,50,60,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
-    ProbaNorm <- CalculProbability(ListeProba/100,"Lognormal")
+    listeProba <- c( 10^seq(minProba.ind,0),5,10,20,30,40,50,60,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
+    probaNorm <- CalculProbability(listeProba/100,"Lognormal")
 
-    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
-    return(Graph)
+    if (axis == "x"){
+        graph <- graph + scale_x_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
+    } else if (axis == "y"){
+        graph <- graph + scale_y_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
+    }
+
+    return(graph)
 }
