@@ -91,6 +91,9 @@ ReliabilityAnalysis <- function()
             return()
         }
 
+    } else if (userChoice == "u") {
+            AutoUpdate()
+
     } else {
         return()
     }
@@ -114,4 +117,12 @@ amsRelHeader <- function()
     cat("\t\t\t/                                        /\n ")
     cat("\t\t\t//////////////////////////////////////////\n\n ")
     cat(paste("\n\nYou are currently using amsReliability version ", packageVersion("amsReliability"), ".\n\n\n", sep=''))
+}
+
+AutoUpdate <- function()
+{
+    print("AutoUpdate ongoing")
+    library(devtools)
+    install_github("KDB2/amsReliability")
+    return()
 }
