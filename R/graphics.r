@@ -37,7 +37,7 @@
 ################################################################################
 
 
-CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", Scale.x = "Log", Scale.y="Lognormal", ErrorBands=TRUE, Save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, Title="", scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull and degradation (%) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
@@ -55,27 +55,20 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
     # Add default options
     Graph <- GraphBase(Graph, Title)
-
+    Graph <- AddThemeAxis(Graph, scale.x, scale.y)
     # Definition of scales
-    #Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
-    #Graph <- CreateAxisLog(Graph, scaleLimits = lim, axis = "x")
-    Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
-    # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    # Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
-    Graph <- CreateAxisLognormal(Graph, probaMin)
-    # Grid definitions
-    Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
-    Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
-    Graph <- Graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
 
-    Graph <- Graph + geom_point(size=4)#+annotation_logticks(sides='tb')
+    Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
+    Graph <- CreateAxisLognormal(Graph, probaMin)
+
+    Graph <- AddGrid(Graph)
 
     # Add the theoretical model
     if (!is.null(ModelDataTable)){
         Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
     }
     # Add the confidence intervals
-    if (!is.null(ConfidenceDataTable) & ErrorBands==TRUE) {
+    if (!is.null(ConfidenceDataTable) & errorBands==TRUE) {
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     }
@@ -86,8 +79,8 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     print(Graph)
 
     # Save as png or pdf
-    if (Save == TRUE){
-        GraphSave(Title, Extension ="png")
+    if (save == TRUE){
+        GraphSave(Title, extension ="png")
     }
 }
 
@@ -109,20 +102,27 @@ GraphBase <- function(graph, title)
     graph <- graph + theme(legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"))
     #Box around the conditions in legend
     graph <- graph + theme(legend.key = element_rect(fill="gray90", colour = "black", linetype=0))
-    # Label/ticks size
-    graph <- graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
-    graph <- graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
-    graph <- graph + theme(axis.ticks.length = unit(-0.25, "cm"))#, axis.ticks.margin = unit(0.4, "cm")) #Depreciated see margin above.
     # Add a title
     graph <- graph + ggtitle(title)
     graph <- graph + theme(plot.title = element_text(face="bold", size=18))
     # Font size & x/y titles...
     graph <- graph + theme(axis.title.x = element_text(face="bold", size=16))
     graph <- graph + theme(axis.title.y = element_text(face="bold", size=16))
+    # Size of symbols
+    graph <- graph + geom_point(size=4)
 
     return(graph)
 }
 
+AddGrid <- function(graph)
+# Add Grid to graph
+{
+    # Grid definitions
+    graph <- graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
+    graph <- graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
+    graph <- graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
+    return(graph)
+}
 
 GraphSave <- function(title, extension="png")
 # Save a graph
@@ -258,6 +258,26 @@ CreateAxisLognormal <- function(graph, minProba, axis = "y")
     } else if (axis == "y"){
         graph <- graph + scale_y_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
     }
+
+    return(graph)
+}
+
+AddThemeAxis <- function(graph, scale.x = "Log", scale.y="Lognormal" )
+# Label/ticks size
+{
+    if (scale.x == "Log"){
+        graph <- graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
+    } else {
+        graph <- graph + theme(axis.text.x = element_text(size=16, margin=margin(0.4,0,0,0, "cm")))
+    }
+
+    if (scale.y == "Log"){
+        graph <- graph + theme(axis.text.y = element_text(face="bold", size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    } else {
+        graph <- graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    }
+
+    graph <- graph + theme(axis.ticks.length = unit(-0.25, "cm"))
 
     return(graph)
 }
