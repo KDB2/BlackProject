@@ -44,49 +44,29 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 {
     # x scale limits calculation based on the data.
     lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=1)
-    # lim.low <- lim[1]
-    # lim.high <- lim[2]
-    #
-    # # Now that we have the limits, we create the graph labels for x axis.
-    # GraphLabels <- 10^(seq(log10(lim.low),log10(lim.high)))
-    # # Now we create the minor ticks
-    # ind.lim.high <- log10(lim.high)
-    # ind.lim.low <- log10(lim.low)
-    # MinorTicks <- rep(seq(1,9), ind.lim.high - ind.lim.low ) * rep(10^seq(ind.lim.low, ind.lim.high-1), each=9)
-    #
-    # # Function used to calculate the distance between ticks for logscale. See line 166:
-    # # minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    # faceplant1 <- function(x) {
-    #     return (c(x[1]*10^.25, x[2]/10^.25))
-    # }
-    #
-    # faceplant2 <- function(x) {
-    #     return (MinorTicks)
-    # }
-    #############################
-
+    probaMin <- min(ExpDataTable$Probability)
     # Label for y axis
     # Dynamique labels as a function of the minimal probability observed.
     # Minimal proba is 0.01 %
 
-    # Case 0: Proba min is above 1%
-    if (Scaley == "Weibull"){ # Weibull requires 63% and details in low %
-        ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
-    } else { # Lognormal scale is symetric.
-        ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
-    }
-
-    MinProba <- min(ExpDataTable$Probability)
-
-    if (MinProba <= CalculProbability(1/100,Scaley)){ # Case 1: lower than 1%
-        ListeProba <- c(0.1,ListeProba, 99.9)
-    }
-    if (MinProba <= CalculProbability(0.1/100,Scaley)){ # Case 2: lower than 0.1%
-        ListeProba <- c(0.01,ListeProba, 99.99)
-    }
-
-    # Probability vector used to draw y axis.
-    ProbaNorm <- CalculProbability(ListeProba/100,Scaley)
+    # # Case 0: Proba min is above 1%
+    # if (Scaley == "Weibull"){ # Weibull requires 63% and details in low %
+    #     ListeProba <- c(1,2,3,5,10,20,30,40,50,63,70,80,90,95,99)
+    # } else { # Lognormal scale is symetric.
+    #     ListeProba <- c(1,5,10,20,30,40,50,60,70,80,90,95,99)
+    # }
+    #
+    # MinProba <- min(ExpDataTable$Probability)
+    #
+    # if (MinProba <= CalculProbability(1/100,Scaley)){ # Case 1: lower than 1%
+    #     ListeProba <- c(0.1,ListeProba, 99.9)
+    # }
+    # if (MinProba <= CalculProbability(0.1/100,Scaley)){ # Case 2: lower than 0.1%
+    #     ListeProba <- c(0.01,ListeProba, 99.99)
+    # }
+    #
+    # # Probability vector used to draw y axis.
+    # ProbaNorm <- CalculProbability(ListeProba/100,Scaley)
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
@@ -100,10 +80,11 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 
     # Definition of scales
     #Graph <- CreateScale.x(Graph, CleanExpTable$TTF, Scale = "Log")
-    Graph <- CreateAxisLog(Graph, scaleLimits = lim, axis = "x")
-    #Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
+    #Graph <- CreateAxisLog(Graph, scaleLimits = lim, axis = "x")
+    Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
     # Graph <- Graph + scale_x_log10(limits = c(lim.low,lim.high),breaks = GraphLabels,labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(MinorTicks)))
-    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
+    # Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
+    Graph <- CreateAxisLognormal(Graph, probaMin)
     # Grid definitions
     Graph <- Graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
     Graph <- Graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
@@ -256,12 +237,6 @@ CreateScale.x <- function(Graph, Data, Scale = "Log")
 }
 
 
-CreateScale.y <- function()
-{
-
-}
-
-
 CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
 # Create a log axis.
 # Limits <- c(lim.low, lim.high)
@@ -293,20 +268,45 @@ CreateAxisLog <- function(Graph, scaleLimits, axis = "x")
 }
 
 CreateAxisLin <- function(Graph, scaleLimits, axis = "x")
-# Create a log axis.
-# Limits <- c(lim.low, lim.high)
+# Create a lin axis.
+# Limits <- c(lim.low, lim.high) # Not used in the current implementation
 # axis: x or y
 {
     lim.low <- scaleLimits[1]
     lim.high <- scaleLimits[2]
 
-
     if (axis == "x"){
-        Graph <- Graph + scale_x_continuous(limits = c(lim.low,lim.high), breaks = waiver(), labels = waiver(), minor_breaks= waiver())
-        Graph <- Graph + annotation_logticks(sides='tb')
+        Graph <- Graph + scale_x_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
+
     } else if (axis == "y"){
-        Graph <- Graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
-        Graph <- Graph + annotation_logticks(sides='lr')
+        Graph <- Graph + scale_y_continuous(limits = NULL, breaks = waiver(), labels = waiver(), minor_breaks= waiver())
     }
+    return(Graph)
+}
+
+CreateAxisWeibull <- function(Graph, minProba)
+# Create a Weibull scale on axis y
+# minProba defines the minimal probability being displayed.
+# minProba is given in weibit
+{
+    minProba.ind <- min(0, floor(log10( (1-exp(-exp( minProba)))  *100)))
+    ListeProba <- c( 10^seq(minProba.ind,0),2,3,5,10,20,30,40,50,63,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
+    ProbaNorm <- CalculProbability(ListeProba/100,"Weibull")
+
+    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
+    return(Graph)
+}
+
+
+CreateAxisLognormal <- function(Graph, minProba)
+# Create a lognormal scale on axis y
+# minProba defines the minimal probability being displayed.
+# minProba is given in standard deviations.
+{
+    minProba.ind <- min(0, floor(log10(pnorm(minProba)*100)))
+    ListeProba <- c( 10^seq(minProba.ind,0),5,10,20,30,40,50,60,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
+    ProbaNorm <- CalculProbability(ListeProba/100,"Lognormal")
+
+    Graph <- Graph + scale_y_continuous(limits=range(ProbaNorm), breaks=ProbaNorm, labels=ListeProba)
     return(Graph)
 }
