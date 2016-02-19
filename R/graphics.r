@@ -51,7 +51,6 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     CleanExpTable <- ExpDataTable[ExpDataTable$Status==1,]
     CleanExpTable <- CleanExpTable[order(CleanExpTable$"Conditions"),]
 
-    a <-"TTF"
     # Graph creation with CleanTable
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
     # Add default options
@@ -262,6 +261,18 @@ CreateAxisLognormal <- function(graph, minProba, axis = "y")
     return(graph)
 }
 
+
+CreateAxis.x <- function(graph, data, scale)
+{
+    if (scale == "Log"){
+        lim <- ExtractLimits(data, minDecades = 3)
+        graph <- CreateAxisLog(graph, scaleLimits = lim ,axis="x")
+    } else if (scale == "Lin"){
+        lim <- ExtractLimits(data, minDecades = 1)
+        graph <- CreateAxisLin(graph, scaleLimits = lim ,axis="x")
+    }
+    return(graph)
+}
 
 AddThemeAxis <- function(graph, scale.x = "Log", scale.y="Lognormal" )
 # Label/ticks size
