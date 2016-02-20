@@ -79,10 +79,13 @@ amsReliability <- function()
     about <- tkmenu(topMenu, tearoff=FALSE)
     tkadd(about,"command",label="Update",
           command=function() {AutoUpdate(); tkdestroy(tt); amsReliability()}) # reload GUI after update.
+
+    boxFont <- tkfont.create(size=10,weight ="bold")
+    boxText <- tklabel(about, text="Welcome in amsReliability!")
     tkadd(about,"command",label="About",
           command=function()
                 tkmessageBox(title="About",
-                            message=paste("amsReliability\nVersion ", packageVersion("amsReliability"),"\n\nEmmanuel Chery\n2015--2016",sep=""),
+                            message=paste("\n            amsReliability ", packageVersion("amsReliability"),"\n\n   \"Reliability Data Analysis Tool\"\n\n\n\nEmmanuel Chery\t(2015--2016)",sep=""),
                             icon="info"))
     tkadd(topMenu,"cascade",label="Help",menu=about)
 
