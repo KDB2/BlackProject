@@ -182,7 +182,7 @@ amsReliability <- function()
     tkbind(tt, "<Destroy>", function()tclvalue(done)<-2)
     tkwait.variable(done)
 
-    if(tclvalue(done)=="2") stop("Quit -- The light at the end of the tunnel will be switched off.")
+    if(tclvalue(done)=="2") cat("Quit -- The light at the end of the tunnel will be switched off.")
 
     tkdestroy(tt)
 }
