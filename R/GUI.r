@@ -138,7 +138,7 @@ amsReliability <- function()
         # Option values:
         errorband <- as.character(tclvalue(errorValue))
         save <- as.character(tclvalue(saveValue))
-        if (error == "1"){
+        if (errorband == "1"){
             errorband <- TRUE
         } else {
             errorband <- FALSE
@@ -149,7 +149,8 @@ amsReliability <- function()
         } else {
             save <- FALSE
         }
-
+        print(save)
+        print(errorband)
         # List value:
         userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
         tkdestroy(tt)
