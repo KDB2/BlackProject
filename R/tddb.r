@@ -211,10 +211,12 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                   # Check if the modelization is a succes
                   if (class(ModelDataTable) != "try-error"){
                       ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
-                      CreateGraph(DataTable,ModelDataTable,ErrorDataTable,DeviceID,Scale="Weibull",ErrorBand,Save)
+                      CreateGraph(DataTable, ModelDataTable, ErrorDataTable, title = DeviceID,
+                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", errorBands = ErrorBand, save = Save)
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                       ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
-                      CreateGraph(DataTable,ModelDataTable,DataTable,DeviceID,Scale="Weibull",ErrorBand=FALSE,Save=FALSE)
+                      CreateGraph(DataTable, ModelDataTable, DataTable, title = DeviceID,
+                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", ErrorBand = FALSE, Save = FALSE)
                   }
               } else { # reading files returned an error
                   print("Error detected in the file(s) you selected. Please check your selection.")
