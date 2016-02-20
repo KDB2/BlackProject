@@ -37,12 +37,15 @@
 ################################################################################
 
 
+#### Main graphics function ####
+
 CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, title="", axisTitles = c("",""), scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
-# Default y scale is Lonormale scale but Weibull and degradation (%) are available as an option.
+# Default y scale is Lonormale scale but Weibull, Log and Lin (degradation charts (%)) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
 {
     # x scale limits calculation based on the data.
+    # ACCURATE CALCULATION DEPENDS ON THE AXIS CHOICE. TO BE PROGRAMMED
     lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=1)
     probaMin <- min(ExpDataTable$Probability)
 
@@ -53,15 +56,22 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
 
     # Graph creation with CleanTable
     Graph <- ggplot(data=CleanExpTable, aes(x=TTF, y=Probability, colour=Conditions, shape=Conditions))
+
+    # Definition of scales
+    Graph <- CreateAxis.x(Graph, CleanExpTable$TTF, scale.x)
+    Graph <- CreateAxis.y(Graph, CleanExpTable$Probability, scale.y)
     # Add default options
     Graph <- GraphBase(Graph, title)
+    # Font size
     Graph <- AddThemeAxis(Graph, scale.x, scale.y)
-    # Definition of scales
-
-    Graph <- CreateAxisLin(Graph, scaleLimits = lim, axis = "x")
-    Graph <- CreateAxisLognormal(Graph, probaMin)
-
-    Graph <- AddGrid(Graph)
+    # x/y titles
+    Graph <- Graph + xlab(axisTitles[1]) + ylab(axisTitles[2])
+    # Grid
+    if (scale.y == "Log" | scale.y == "Lin") {
+        Graph <- AddGrid(Graph, minor.y = TRUE)
+    } else { # Probability plots don't need a minor grid on y. 
+        Graph <- AddGrid(Graph, minor.y = FALSE)
+    }
 
     # Add the theoretical model
     if (!is.null(ModelDataTable)){
@@ -73,10 +83,6 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
         Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=TTF, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
     }
 
-    # Font size & x/y titles...
-    # Graph <- Graph + xlab("Time to Failure (s)") + ylab("Probability (%)")
-    Graph <- Graph + xlab(axisTitles[1]) + ylab(axisTitles[2])
-
     print(Graph)
 
     # Save as png or pdf
@@ -85,6 +91,9 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     }
 }
 
+
+
+#### Graphics utilities #####
 
 GraphBase <- function(graph, title)
 # Add default parameters to a graph
@@ -106,7 +115,7 @@ GraphBase <- function(graph, title)
     # Add a title
     graph <- graph + ggtitle(title)
     graph <- graph + theme(plot.title = element_text(face="bold", size=18))
-    # Font size & x/y titles...
+    # Font size
     graph <- graph + theme(axis.title.x = element_text(face="bold", size=16))
     graph <- graph + theme(axis.title.y = element_text(face="bold", size=16))
     # Size of symbols
@@ -115,15 +124,74 @@ GraphBase <- function(graph, title)
     return(graph)
 }
 
-AddGrid <- function(graph)
+
+AddGrid <- function(graph, minor.y = TRUE)
 # Add Grid to graph
 {
     # Grid definitions
     graph <- graph + theme(panel.grid.major = element_line(colour="white", size=0.25, linetype=1))
     graph <- graph + theme(panel.grid.minor = element_line(linetype=2, colour="white", size = 0.25))
-    graph <- graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
+    if (minor.y){
+        graph <- graph + theme(panel.grid.minor.y = element_line(linetype=2, colour="white", size = 0.25))
+    } else {
+        graph <- graph + theme(panel.grid.minor.y = element_line(linetype=0, colour="white", size = 0.25))
+    }
     return(graph)
 }
+
+
+AddThemeAxis <- function(graph, scale.x = "Log", scale.y="Lognormal" )
+# Label/ticks size
+# if the scale is logarithmic, font is in bold. (bug with 10^x presentation)
+{
+    if (scale.x == "Log"){
+        graph <- graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
+    } else {
+        graph <- graph + theme(axis.text.x = element_text(size=16, margin=margin(0.4,0,0,0, "cm")))
+    }
+
+    if (scale.y == "Log"){
+        graph <- graph + theme(axis.text.y = element_text(face="bold", size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    } else {
+        graph <- graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
+    }
+
+    graph <- graph + theme(axis.ticks.length = unit(-0.25, "cm"))
+
+    return(graph)
+}
+
+
+ExtractLimits <- function(data, minDecades=3)
+# Return the limits of the Data
+#  Add necessary decades to follow the minimal number of decades requested.
+{
+    if (min(data) <= 0){ # if some values are negative, we simply return the range
+        return(range(data))
+    } else {
+        lim <- range(data) # Min of the values is stored in [1] and max in  [2]
+        lim.high <- 10^(ceiling(log(lim[2],10)))
+        lim.low <- 10^(floor(log(lim[1],10)))
+
+        nbDecades <- log10(lim.high) - log10(lim.low)
+        diff <- minDecades - nbDecades
+
+        # In case the number of minimal decades is not reached, we add decades at both ends
+        if ( nbDecades < minDecades ) {
+            # We estimate where the data are closer to the edge in order to add the aditional decade on this side.
+            # (Odd case)
+            if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){ # additional decade on the left.
+                lim.low <- lim.low / 10^(diff %/% 2 + diff %% 2)
+                lim.high <- lim.high * 10^(diff %/% 2)
+            } else { # aditional decade on the right
+                lim.low <- lim.low / 10^(diff %/% 2 )
+                lim.high <- lim.high * 10^(diff %/% 2 + diff %% 2)
+            }
+        }
+        return(c(lim.low, lim.high))
+    }
+}
+
 
 GraphSave <- function(title, extension="png")
 # Save a graph
@@ -151,33 +219,6 @@ GraphTargetLines <- function(graph, x=NULL, y=NULL, colorx="red", typex = 2, col
 }
 
 
-ExtractLimits <- function(data, minDecades=3)
-# Return the limits of the Data
-#  Add necessary decades to follow the minimal number of decades requested.
-{
-    lim <- range(data) # Min of the values is stored in [1] and max in  [2]
-    lim.high <- 10^(ceiling(log(lim[2],10)))
-    lim.low <- 10^(floor(log(lim[1],10)))
-
-    nbDecades <- log10(lim.high) - log10(lim.low)
-    diff <- minDecades - nbDecades
-
-    # In case the number of minimal decades is not reached, we add decades at both ends
-    if ( nbDecades < minDecades ) {
-        # We estimate where the data are closer to the edge in order to add the aditional decade on this side.
-        # (Odd case)
-        if ((log10(lim[1]) - log10(lim.low)) < (log10(lim.high) - log10(lim[2]))){ # additional decade on the left.
-            lim.low <- lim.low / 10^(diff %/% 2 + diff %% 2)
-            lim.high <- lim.high * 10^(diff %/% 2)
-        } else { # aditional decade on the right
-            lim.low <- lim.low / 10^(diff %/% 2 )
-            lim.high <- lim.high * 10^(diff %/% 2 + diff %% 2)
-        }
-    }
-    return(c(lim.low, lim.high))
-}
-
-
 CreateAxisLog <- function(graph, scaleLimits, axis = "x")
 # Create a log axis.
 # Limits <- c(lim.low, lim.high)
@@ -202,11 +243,14 @@ CreateAxisLog <- function(graph, scaleLimits, axis = "x")
 
     if (axis == "x"){
         graph <- graph + scale_x_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+        graph <- graph + annotation_logticks(sides='tb')
     } else if (axis == "y"){
         graph <- graph + scale_y_log10(limits = c(lim.low,lim.high), breaks = graphLabels, labels = trans_format("log10", math_format(10^.x)), minor_breaks=trans_breaks(faceplant1, faceplant2, n=length(minorTicks)))
+        graph <- graph + annotation_logticks(sides='lr')
     }
     return(graph)
 }
+
 
 CreateAxisLin <- function(graph, scaleLimits, axis = "x")
 # Create a lin axis.
@@ -225,6 +269,7 @@ CreateAxisLin <- function(graph, scaleLimits, axis = "x")
     return(graph)
 }
 
+
 CreateAxisWeibull <- function(graph, minProba, axis = "y")
 # Create a Weibull scale on axis y
 # minProba defines the minimal probability being displayed.
@@ -232,7 +277,7 @@ CreateAxisWeibull <- function(graph, minProba, axis = "y")
 {
     minProba.ind <- min(0, floor(log10( (1-exp(-exp( minProba)))  *100)))
     listeProba <- c( 10^seq(minProba.ind,0),2,3,5,10,20,30,40,50,63,70,80,90,95, (100 - 10^seq(0 , minProba.ind)) )
-    probaNorm <- CalculProbability(ListeProba/100,"Weibull")
+    probaNorm <- CalculProbability(listeProba/100,"Weibull")
 
     if (axis == "x"){
         graph <- graph + scale_x_continuous(limits=range(probaNorm), breaks=probaNorm, labels=listeProba)
@@ -263,6 +308,8 @@ CreateAxisLognormal <- function(graph, minProba, axis = "y")
 
 
 CreateAxis.x <- function(graph, data, scale)
+# Generic function to create an x axis.
+# Scale can be Log (Logarithmic) or Lin (Linear).
 {
     if (scale == "Log"){
         lim <- ExtractLimits(data, minDecades = 3)
@@ -274,22 +321,24 @@ CreateAxis.x <- function(graph, data, scale)
     return(graph)
 }
 
-AddThemeAxis <- function(graph, scale.x = "Log", scale.y="Lognormal" )
-# Label/ticks size
+
+CreateAxis.y <- function(graph, data, scale)
+# Generic function to create an y axis.
+# Scale can be Log (Logarithmic) or Lin (Linear)
+# or Weibull or Lognormal.
 {
-    if (scale.x == "Log"){
-        graph <- graph + theme(axis.text.x = element_text(face="bold", size=16, margin=margin(0.4,0,0,0, "cm")))
-    } else {
-        graph <- graph + theme(axis.text.x = element_text(size=16, margin=margin(0.4,0,0,0, "cm")))
+    if (scale == "Log"){
+        lim <- ExtractLimits(data, minDecades = 3)
+        graph <- CreateAxisLog(graph, scaleLimits = lim ,axis="y")
+    } else if (scale == "Lin"){
+        lim <- ExtractLimits(data, minDecades = 1)
+        graph <- CreateAxisLin(graph, scaleLimits = lim ,axis="y")
+    } else if (scale == "Weibull"){
+        lim = min(data)
+        graph <- CreateAxisWeibull(graph, minProba = lim ,axis="y")
+    } else if (scale == "Lognormal"){
+        lim = min(data)
+        graph <- CreateAxisLognormal(graph, minProba = lim ,axis="y")
     }
-
-    if (scale.y == "Log"){
-        graph <- graph + theme(axis.text.y = element_text(face="bold", size=16, margin=margin(0,0.4,0,0.2, "cm")))
-    } else {
-        graph <- graph + theme(axis.text.y = element_text(size=16, margin=margin(0,0.4,0,0.2, "cm")))
-    }
-
-    graph <- graph + theme(axis.ticks.length = unit(-0.25, "cm"))
-
     return(graph)
 }
