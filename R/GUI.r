@@ -130,7 +130,10 @@ amsReliability <- function()
     tkconfigure(save,variable=saveValue)
     tkgrid(tklabel(tt,text="\tDisplay error bands:"),error, columnspan=2)
     tkgrid(tklabel(tt,text="\tSave chart:"),save, columnspan=2)
-
+    # Confidence level
+    clevel <- tclVar("0.95")
+    clevelEntry <-tkentry(tt,width="5",textvariable=clevel)
+    tkgrid(tklabel(tt,text="\tConfidence level:"),clevelEntry,columnspan=2)
 
     # OnOK function
     OnOK <- function()
@@ -149,16 +152,17 @@ amsReliability <- function()
         } else {
             save <- FALSE
         }
-        print(save)
-        print(errorband)
+        # Confidence level
+        confidence <- as.numeric(tclvalue(clevel))
+
         # List value:
         userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
         tkdestroy(tt)
 
         if (userChoice == 1){
-            OxideTDDB(ErrorBand = errorband, Save = save)
+            OxideTDDB(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
         } else if (userChoice == 2){
-            BlackAnalysis(ErrorBand = errorband, Save = save)
+            BlackAnalysis(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
         } else if (userChoice == 3){
             CreateExportFiles()
         }
