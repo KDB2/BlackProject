@@ -1,3 +1,56 @@
+################################################################################
+###                                                                          ###
+###    INFORMATIONS                                                          ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       PACKAGE NAME        amsReliability                                 ###
+###       MODULE NAME         GUI.r                                          ###
+###       VERSION             0.9.1                                          ###
+###                                                                          ###
+###       AUTHOR              Emmanuel Chery                                 ###
+###       MAIL                emmanuel.chery@ams.com                         ###
+###       DATE                2016/02/20                                     ###
+###       PLATFORM            Windows 7 & Gnu/Linux 3.16                     ###
+###       R VERSION           R 3.1.1                                        ###
+###       REQUIRED PACKAGES   ggplot2, grid, MASS, nlstools, scales          ###
+###       LICENSE             GNU GENERAL PUBLIC LICENSE                     ###
+###                           Version 3, 29 June 2007                        ###
+###                                                                          ###
+###                                                                          ###
+###    DESCRIPTION                                                           ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       This package is a collection of scripts dedicated to help          ###
+###    the process reliability team of ams AG. It includes tools to          ###
+###    quickly visualize data and extract model parameters in order          ###
+###    to predict device lifetimes.                                          ###
+###                                                                          ###
+###       This module is dedicated to the GUI function.                      ###
+###    It allows starting all other functions by using a graphical menu.     ###
+###                                                                          ###
+###                                                                          ###
+###    FUNCTIONS                                                             ###
+###    ---------------------------------                                     ###
+###                                                                          ###
+###       amsReliability          Display a menu to select an analysis       ###
+###                                                                          ###
+################################################################################
+
+
+#' Reliability data analysis
+#'
+#' This function displays a menu listing all available analyses.
+#' User is guided with a GUI in order to select the analysis.
+#'
+#' @param None
+#'
+#' @return None
+#'
+#' @examples
+#' amsReliability()
+#' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
+#' @import ggplot2 MASS scales nlstools tcltk
+#' @export
 amsReliability <- function()
 {
     # Main windows
