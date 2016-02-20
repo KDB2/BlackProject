@@ -78,7 +78,7 @@ amsReliability <- function()
     # About & Update Menu
     about <- tkmenu(topMenu, tearoff=FALSE)
     tkadd(about,"command",label="Update",
-          command=function() AutoUpdate())
+          command=function() {AutoUpdate(); tkdestroy(tt); amsReliability()}) # reload GUI after update.
     tkadd(about,"command",label="About",
           command=function()
                 tkmessageBox(title="About",
@@ -186,5 +186,7 @@ AutoUpdate <- function()
     print("AutoUpdate ongoing")
     library(devtools)
     install_github("KDB2/amsReliability")
+    detach("package:amsReliability", unload=TRUE)
+    library("amsReliability")
     return()
 }
