@@ -398,3 +398,11 @@ OrderConditions <- function(DataTable)
     }
     return(VecIndices)
 }
+
+
+clc <- function()
+# Clear screen function for terminal
+{
+    return(cat("\n\n\n\n\n\n\n\n"))
+    # return(cat("\014"))
+}

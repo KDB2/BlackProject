@@ -178,3 +178,12 @@ amsReliability <- function()
 
     tkdestroy(tt)
 }
+
+
+AutoUpdate <- function()
+{
+    print("AutoUpdate ongoing")
+    library(devtools)
+    install_github("KDB2/amsReliability")
+    return()
+}
