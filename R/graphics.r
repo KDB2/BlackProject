@@ -39,37 +39,38 @@
 
 #### Main graphics function ####
 
-CreateGraph <- function(expDataTable, ModelDataTable = NULL, ConfidenceDataTable = NULL,
+CreateGraph <- function(dataExp, ModelDataTable = NULL, ConfidenceDataTable = NULL,
                 aesVec = c("TTF", "Probability", "Conditions"), title="", axisTitles = c("",""),
                 scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull, Log and Lin (degradation charts (%)) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
-# aes are given in vector form with max 4 names: aesVec = c(abs, ord, Conditions, Split, )
+# aes are given in vector form with max 4 names: aesVec = c(abs, ord, Conditions, Split)
 {
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
-    expDataTable <- expDataTable[expDataTable$Status==1,]
-    expDataTable <- expDataTable[order(expDataTable$"Conditions"),]
+    dataExp <- dataExp[dataExp$Status==1,]
+    dataExp <- dataExp[order(dataExp$"Conditions"),]
 
-    # Replacement of column names listed in aesVec by generic names:
-    names(expDataTable)[match(aesVec[1],names(expDataTable))] <- "abs"
-    names(expDataTable)[match(aesVec[2],names(expDataTable))] <- "ord"
-    names(expDataTable)[match(aesVec[3],names(expDataTable))] <- "Conditions"
-
-    # Graph creation with expDataTable
+    # Graph creation with dataExp
     if (length(aesVec) == 3){
-        Graph <- ggplot(data=expDataTable, aes(x=abs, y=ord, colour=Conditions, shape=Conditions))
+        # Chart
+        Graph <- ggplot(data=dataExp, aes(x=dataExp[[aesVec[1]]], y=dataExp[[aesVec[2]]],
+                        colour=dataExp[[aesVec[3]]], shape=dataExp[[aesVec[3]]]))
+        # Legend title
+        Graph <- Graph + labs(colour = aesVec[3]) + labs(shape=aesVec[3])
     } else if (length(aesVec) == 4){
-        # Last name replacement
-        names(expDataTable)[match(aesVec[4],names(expDataTable))] <- "Split"
-        Graph <- ggplot(data=expDataTable, aes(x=abs, y=ord, colour=Conditions, shape=Split))
+        # Chart
+        Graph <- ggplot(data=dataExp, aes(x=dataExp[[aesVec[1]]], y=dataExp[[aesVec[2]]],
+                colour=dataExp[[aesVec[3]]], shape=dataExp[[aesVec[4]]]))
+        # Legend title
+        Graph <- Graph + labs(colour = aesVec[3]) + labs(shape=aesVec[4])
     }
 
     # Definition of scales
-    Graph <- CreateAxis.x(Graph, expDataTable$abs, scale.x)
-    Graph <- CreateAxis.y(Graph, expDataTable$ord, scale.y)
+    Graph <- CreateAxis.x(Graph, dataExp[[aesVec[1]]], scale.x)
+    Graph <- CreateAxis.y(Graph, dataExp[[aesVec[2]]], scale.y)
     # Add default options
     Graph <- GraphBase(Graph, title)
     # Font size
@@ -85,19 +86,18 @@ CreateGraph <- function(expDataTable, ModelDataTable = NULL, ConfidenceDataTable
 
     # Add the theoretical model
     if (!is.null(ModelDataTable)){
-        # Replacement of column names listed in aesVec by generic names:
-        names(ModelDataTable)[match(aesVec[1],names(ModelDataTable))] <- "abs"
-        names(ModelDataTable)[match(aesVec[2],names(ModelDataTable))] <- "ord"
-        names(ModelDataTable)[match(aesVec[3],names(ModelDataTable))] <- "Conditions"
-        Graph <- Graph + geom_line(data=ModelDataTable, aes(color=Conditions), size=0.8)
+        Graph <- Graph + geom_line(data=ModelDataTable, aes(x=ModelDataTable[[aesVec[1]]],
+                            y=ModelDataTable[[aesVec[2]]], color=ModelDataTable[[aesVec[3]]], shape=NULL),
+                            size=0.8)
     }
     # Add the confidence intervals
-    if (!is.null(ConfidenceDataTable) & errorBands==TRUE) {
-        # Replacement of column names listed in aesVec by generic names:
-        names(ConfidenceDataTable)[match(aesVec[1],names(ConfidenceDataTable))] <- "abs"
-        names(ConfidenceDataTable)[match(aesVec[3],names(ConfidenceDataTable))] <- "Conditions"
-        Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=abs, y=LowerLimit, color=Conditions), linetype="dashed", size=0.8)
-        Graph <- Graph + geom_line(data=ConfidenceDataTable, aes(x=abs, y=HigherLimit, color=Conditions), linetype="dashed",size=0.8)
+    if (errorBands==TRUE) {
+        Graph <- Graph + geom_line(data=ConfidenceDataTable,
+                        aes(x=ConfidenceDataTable[[aesVec[1]]], y=LowerLimit, color=ConfidenceDataTable[[aesVec[1]]],
+                            shape=NULL), linetype="dashed", size=0.8)
+        Graph <- Graph + geom_line(data=ConfidenceDataTable,
+                        aes(x=ConfidenceDataTable[[aesVec[1]]], y=HigherLimit, color=ConfidenceDataTable[[aesVec[1]]],
+                            shape=NULL), linetype="dashed",size=0.8)
     }
 
     print(Graph)
