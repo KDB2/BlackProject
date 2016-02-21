@@ -91,7 +91,7 @@ CreateGraph <- function(dataExp, ModelDataTable = NULL, ConfidenceDataTable = NU
                             size=0.8)
     }
     # Add the confidence intervals
-    if (errorBands==TRUE) {
+    if (!is.null(ConfidenceDataTable) & errorBands==TRUE){
         Graph <- Graph + geom_line(data=ConfidenceDataTable,
                         aes(x=ConfidenceDataTable[[aesVec[1]]], y=LowerLimit, color=ConfidenceDataTable[[aesVec[1]]],
                             shape=NULL), linetype="dashed", size=0.8)

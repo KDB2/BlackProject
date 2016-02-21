@@ -160,7 +160,7 @@ amsReliability <- function()
 
         # List value:
         userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
-        tkdestroy(tt)
+
 
         if (userChoice == 1){
             OxideTDDB(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
@@ -169,6 +169,9 @@ amsReliability <- function()
         } else if (userChoice == 3){
             CreateExportFiles()
         }
+        tkdestroy(tt)
+        Sys.sleep(0.5)
+        amsReliability()
     }
 
 
@@ -182,7 +185,7 @@ amsReliability <- function()
     tkbind(tt, "<Destroy>", function()tclvalue(done)<-2)
     tkwait.variable(done)
 
-    if(tclvalue(done)=="2") cat("Quit -- The light at the end of the tunnel will be switched off.")
+    if(tclvalue(done)=="2") invisible()
 
     tkdestroy(tt)
 }
