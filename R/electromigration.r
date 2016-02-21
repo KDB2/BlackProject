@@ -234,7 +234,7 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                   # There was an error either with Area or with modelization, we go to fallback mode
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                         ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
-                        CreateGraph(DataTable, ModelDataTable, DataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
+                        CreateGraph(DataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
                                     axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", errorBands = FALSE, save = FALSE)
                   }
 

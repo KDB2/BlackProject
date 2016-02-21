@@ -215,7 +215,7 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                           axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", errorBands = ErrorBand, save = Save)
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                       ModelDataTable <- FitDistribution(DataTable,Scale="Weibull")
-                      CreateGraph(DataTable, ModelDataTable, DataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
+                      CreateGraph(DataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
                           axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", ErrorBand = FALSE, Save = FALSE)
                   }
               } else { # reading files returned an error
