@@ -160,7 +160,7 @@ amsReliability <- function()
 
         # List value:
         userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
-
+        tkdestroy(tt)
 
         if (userChoice == 1){
             OxideTDDB(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
@@ -169,7 +169,7 @@ amsReliability <- function()
         } else if (userChoice == 3){
             CreateExportFiles()
         }
-        tkdestroy(tt)
+
         Sys.sleep(0.5)
         amsReliability()
     }
