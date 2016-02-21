@@ -208,7 +208,8 @@ FitDistribution <- function(DataTable,Scale="Lognormal")
 # Use fitdistr function
 {
     # For each condtion we estimate a theoretical distribution
-    ListConditions <- levels(DataTable$Conditions)
+    # A condition needs to have at least one good sample to be counted
+    ListConditions <- levels(DataTable$Conditions[DataTable$Status==1,drop=TRUE])
 
     # Initialisation of ModelDataTable
     ModelDataTable <- data.frame()
