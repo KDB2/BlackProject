@@ -39,15 +39,12 @@
 
 #### Main graphics function ####
 
-CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, title="", axisTitles = c("",""), scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
+CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTable = NULL, title="",
+                        axisTitles = c("",""), scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull, Log and Lin (degradation charts (%)) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
 {
-    # x scale limits calculation based on the data.
-    # ACCURATE CALCULATION DEPENDS ON THE AXIS CHOICE. TO BE PROGRAMMED
-    lim <- ExtractLimits(ExpDataTable$TTF[ExpDataTable$Status==1], minDecades=1)
-    probaMin <- min(ExpDataTable$Probability)
 
     # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
@@ -69,7 +66,7 @@ CreateGraph <- function(ExpDataTable, ModelDataTable = NULL , ConfidenceDataTabl
     # Grid
     if (scale.y == "Log" | scale.y == "Lin") {
         Graph <- AddGrid(Graph, minor.y = TRUE)
-    } else { # Probability plots don't need a minor grid on y. 
+    } else { # Probability plots don't need a minor grid on y.
         Graph <- AddGrid(Graph, minor.y = FALSE)
     }
 
