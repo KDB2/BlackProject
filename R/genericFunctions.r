@@ -284,7 +284,6 @@ FitResultsDisplay <- function(Model, DataTable, DeviceID)
     cat("\n \n",file="fit.txt",append=TRUE)
     cat("Experimental Data:",file="fit.txt",append=TRUE)
     cat("\n",file="fit.txt",append=TRUE)
-    capture.output(DataTable,file="fit.txt",append=TRUE)
 }
 
 
@@ -315,6 +314,13 @@ Ranking <- function(TTF)
 }
 
 
+SaveData2File <- function(data, file)
+# Save Data to a file
+{
+    capture.output(data, file=file, append=TRUE)
+}
+
+
 SelectFiles <- function(Filters=GenericFilters)
 # Allow graphical selection of multiple files.
 # Return them as a list.
@@ -338,6 +344,7 @@ SelectFiles <- function(Filters=GenericFilters)
 
     return(selection)
 }
+
 
 SelectFilesAdvanced <- function(Filters)
 # Allow graphical selection of multiple files
