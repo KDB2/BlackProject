@@ -214,15 +214,19 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                   ModelDataTable <- try(OxideLifetimeModelization(CleanExpDataTable, DeviceID),silent=TRUE)
                   # Check if the modelization is a succes
                   if (class(ModelDataTable) != "try-error"){
-                      ErrorDataTable <- ErrorEstimation(CleanExpDataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
+                      if (ErrorBand) {
+                          ErrorDataTable <- ErrorEstimation(CleanExpDataTable, ModelDataTable, ConfidenceValue, Scale="Weibull")
+                      } else {
+                          ErrorDataTable <- NULL
+                      }
                       CreateGraph(CleanExpDataTable, ModelDataTable, ErrorDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
-                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", errorBands = ErrorBand, save = Save)
+                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", save = Save)
                       # ExpData are added to the fit.txt file created during modelization
                       SaveData2File(DataTable, "fit.txt")
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                       ModelDataTable <- FitDistribution(CleanExpDataTable,Scale="Weibull")
                       CreateGraph(CleanExpDataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
-                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", errorBand = FALSE, save = FALSE)
+                          axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Weibull", save = FALSE)
                   }
               } else { # reading files returned an error
                   print("Error detected in the file(s) you selected. Please check your selection.")

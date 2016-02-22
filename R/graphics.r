@@ -41,7 +41,7 @@
 
 CreateGraph <- function(dataExp, ModelDataTable = NULL, ConfidenceDataTable = NULL,
                 aesVec = c("TTF", "Probability", "Conditions"), title="", axisTitles = c("",""),
-                scale.x = "Log", scale.y="Lognormal", errorBands=TRUE, save=TRUE)
+                scale.x = "Log", scale.y="Lognormal", save=TRUE)
 # Use the table prepared with CreateDataFrame and create the probability plot.
 # Default y scale is Lonormale scale but Weibull, Log and Lin (degradation charts (%)) are available as an option.
 # Default x scale is log but linear (lin) is available in option.
@@ -89,7 +89,7 @@ CreateGraph <- function(dataExp, ModelDataTable = NULL, ConfidenceDataTable = NU
                             size=0.8)
     }
     # Add the confidence intervals
-    if (!is.null(ConfidenceDataTable) & errorBands==TRUE){
+    if (!is.null(ConfidenceDataTable)){
         Graph <- Graph + geom_line(data=ConfidenceDataTable,
                         aes(x=ConfidenceDataTable[[aesVec[1]]], y=LowerLimit, color=ConfidenceDataTable[[aesVec[3]]],
                             shape=NULL), linetype="dashed", size=0.8)

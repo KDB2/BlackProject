@@ -230,9 +230,13 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                   # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
                   ModelDataTable <- try(BlackModelization(CleanExpDataTable, DeviceID),silent=TRUE)
                   if (class(ModelDataTable) != "try-error"){
-                        ErrorDataTable <- ErrorEstimation(CleanExpDataTable, ModelDataTable, ConfidenceValue)
+                        if (ErrorBand){
+                            ErrorDataTable <- ErrorEstimation(CleanExpDataTable, ModelDataTable, ConfidenceValue)
+                        } else {
+                            ErrorDataTable <- NULL
+                        }
                         CreateGraph(CleanExpDataTable, ModelDataTable, ErrorDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
-                                    axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", errorBands = ErrorBand, save = Save )
+                                    axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", save = Save )
                         # ExpData are added to the fit.txt file created during modelization
                         SaveData2File(DataTable, "fit.txt")
 
@@ -240,7 +244,7 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
                         ModelDataTable <- FitDistribution(CleanExpDataTable,Scale="Lognormal")
                         CreateGraph(CleanExpDataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
-                                    axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", errorBands = FALSE, save = FALSE)
+                                    axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", save = FALSE)
                   }
 
               } else { # reading the files returned an error.
