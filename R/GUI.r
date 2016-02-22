@@ -109,14 +109,18 @@ amsReliability <- function()
     ## List of possibilities
     listAnalyses <- c("TDDB modelization and model parameter extraction","EM modelization and model parameter extraction", "EM exportfiles creation")
     maxChar <- max(sapply(listAnalyses, nchar))
-    myList<-tklistbox(tt, height= length(listAnalyses)+1, width= maxChar, selectmode="single",background="white")
+    #myList<-tklistbox(tt, height= length(listAnalyses)+1, width= maxChar, selectmode="single",background="white")
 
-    tkgrid(myList,columnspan=12)
-    for (analysis in listAnalyses){
-        tkinsert(myList,"end",analysis)
-    }
+    #tkgrid(myList,columnspan=12)
+    #for (analysis in listAnalyses){
+    #    tkinsert(myList,"end",analysis)
+    #}
     # default selection
-    tkselection.set(myList,0)
+    #tkselection.set(myList,0)
+
+    initMess <- tclVar("")
+    myList <- ttkcombobox(tt, values=listAnalyses, textvariable=initMess, state="readonly", width=maxChar)
+    tkgrid(myList, columnspan=18)
 
     ## Options
     ### text
@@ -159,14 +163,21 @@ amsReliability <- function()
         confidence <- as.numeric(tclvalue(clevel))
 
         # List value:
-        userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
+        # userChoice <- as.numeric(tkcurselection(myList))+1 # Index starts at 1 now
+        # ComboBox value:
+        userChoice <- tclvalue(initMess)
+
         tkdestroy(tt)
 
-        if (userChoice == 1){
+        # Sanity check
+        if (userChoice == ""){
+            tkmessageBox(title = "Selection empty", message = "No analyses were selected!", icon = "error", type = "ok")
+        }
+        if (userChoice == listAnalyses[1]){
             OxideTDDB(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
-        } else if (userChoice == 2){
+        } else if (userChoice == listAnalyses[2]){
             BlackAnalysis(ErrorBand = errorband, ConfidenceValue = confidence, Save = save)
-        } else if (userChoice == 3){
+        } else if (userChoice == listAnalyses[3]){
             CreateExportFiles()
         }
 
