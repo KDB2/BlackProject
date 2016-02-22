@@ -153,11 +153,10 @@ BlackModelization <- function(DataTable, DeviceID)
 # TTF = A j^(-n) exp(Ea/kT + Scale * Proba)
 # Proba in standard deviations
 # Data(TTF,Status,Probability,Conditions,Stress,Temperature, Dimension, Area)
+# Data have to be cleaned upfront. Only valid data (status==1) should be given.
 {
-    # Remove the units where status is 0
-    CleanDataTable <- DataTable[DataTable$Status==1,]
     # Modelization
-    Model <- ModelFit(CleanDataTable, Law="BlackLaw")
+    Model <- ModelFit(DataTable, Law="BlackLaw")
 
     # Parameters Extraction
     # A <- coef(Model)[1]
@@ -166,8 +165,8 @@ BlackModelization <- function(DataTable, DeviceID)
     # Scale <- coef(Model)[4]
 
     # Using the parameters and the conditions, theoretical distributions are created
-    ListConditions <- levels(CleanDataTable$Conditions)
-    Area <- CleanDataTable$Area[1]
+    ListConditions <- levels(DataTable$Conditions)
+    Area <- DataTable$Area[1]
     ModelDataTable <- CreateModelDataTable(Model, ListConditions, Area, Law="BlackLaw", Scale="Lognormal")
 
     # Display a few information regarding the model: parameters, goodness of fit...
@@ -224,17 +223,23 @@ BlackAnalysis <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
                       DataTable <- AddArea(DataTable, DeviceID)
                   }
 
+                  # Modelization, errorBands calculation and Graph is made with a clean table where only failed samples are kept.
+                  # DataTable is kept in order to be saved in fit.txt
+                  CleanExpDataTable <- KeepOnlyFailed(DataTable)
+
                   # Attempt to modelize. If succes, we plot the chart, otherwise we only plot the data.
-                  ModelDataTable <- try(BlackModelization(DataTable, DeviceID),silent=TRUE)
+                  ModelDataTable <- try(BlackModelization(CleanExpDataTable, DeviceID),silent=TRUE)
                   if (class(ModelDataTable) != "try-error"){
-                        ErrorDataTable <- ErrorEstimation(DataTable, ModelDataTable, ConfidenceValue)
-                        CreateGraph(DataTable, ModelDataTable, ErrorDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
+                        ErrorDataTable <- ErrorEstimation(CleanExpDataTable, ModelDataTable, ConfidenceValue)
+                        CreateGraph(CleanExpDataTable, ModelDataTable, ErrorDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
                                     axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", errorBands = ErrorBand, save = Save )
+                        # ExpData are added to the fit.txt file created during modelization
+                        SaveData2File(DataTable, "fit.txt")
 
                   # There was an error either with Area or with modelization, we go to fallback mode
                   } else { # if modelization is not a success, we display the data and return parameters of the distribution in the console (scale and loc) in case user need them.
-                        ModelDataTable <- FitDistribution(DataTable,Scale="Lognormal")
-                        CreateGraph(DataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
+                        ModelDataTable <- FitDistribution(CleanExpDataTable,Scale="Lognormal")
+                        CreateGraph(CleanExpDataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"), title = DeviceID,
                                     axisTitles = c("Time to Failure (s)","Probability (%)"), scale.x = "Log", scale.y = "Lognormal", errorBands = FALSE, save = FALSE)
                   }
 
