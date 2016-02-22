@@ -287,6 +287,15 @@ FitResultsDisplay <- function(Model, DataTable, DeviceID)
 }
 
 
+KeepOnlyFailed <- function(dataTable)
+# Modelization and error calculation is only performed on failed samples
+# Remove all the other samples and drop the ghost levels.
+{
+    dataTable <- droplevels(dataTable[dataTable$Status == 1,])
+    return(dataTable)
+}
+
+
 ModelFit <- function(dataTable, Law="BlackLaw")
 # Perform a least square fit on an experimental dataset
 # Return a model containing the parameters and the residuals.
