@@ -48,9 +48,7 @@ CreateGraph <- function(dataExp, ModelDataTable = NULL, ConfidenceDataTable = NU
 # aes are given in vector form with max 4 names: aesVec = c(abs, ord, Conditions, Split)
 {
 
-    # We are only going to plot samples where status is '1' (experiment is finished).
     # Table is sorted & conditions stay togeteher.
-    dataExp <- dataExp[dataExp$Status==1,]
     dataExp <- dataExp[order(dataExp$"Conditions"),]
 
     # Graph creation with dataExp
