@@ -259,3 +259,23 @@ CreateExportFiles <- function()
         }
     }
 }
+
+
+ExportFilesCleverSelection <- function()
+# Handle in a clever way the selection of ExportFiles
+{
+    filters <- matrix(c("All files", "*", "Text", ".txt", "deg Files", "*deg.txt", "TCR Files", "*TCR.txt"),4, 2, byrow = TRUE)
+    fileSelected <- SelectFilesAdvanced(filters)
+
+    # Remove the deg or TCR part.
+    fileSelected <- sapply(fileSelected,function(x){substr(x,1,nchar(x)-7)})
+    sapply(substr(x, 1, nchar(x)-7)
+    DeviceIDList <- levels(sapply(ListFiles,function(x){factor(strsplit(x,split="_")[[1]][1])}))
+    # Sort
+    # Remove dual
+    # add TCR and deg
+    # check if existant in the global list
+    # add them to the final lists
+    # return both list.
+
+}
