@@ -217,8 +217,11 @@ CreateExportFiles <- function()
     # Device and Width parameters
     ListDevice <- try(read.delim("//fsup04/fntquap/Common/Qual/Process_Reliability/Process/amsReliability_R_Package/ListDeviceName.txt"),silent=TRUE)
     # File to be read
-    ListDegFiles <- list.files(pattern="*deg.txt")
-    ListTCRFiles <- list.files(pattern="*TCR.txt")
+    # ListDegFiles <- list.files(pattern="*deg.txt")
+    # ListTCRFiles <- list.files(pattern="*TCR.txt")
+    listFilesSelected <- ExportFilesCleverSelection()
+    ListDegFiles <- listFilesSelected[[1]]
+    ListTCRFiles <- listFilesSelected[[2]]
 
     # Check if ListDeviceName.txt was available
     if (class(ListDevice)=="try-error"){
