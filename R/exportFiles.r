@@ -269,7 +269,7 @@ ExportFilesCleverSelection <- function()
 # Will try to match files so that user can only select the deg or the TCR file.
 # return a vector with both lists of files: list(listDeg, listTCR)
 {
-    filters <- matrix(c("All files", "*", "Text", ".txt", "deg Files", "*deg.txt", "TCR Files", "*TCR.txt"),4, 2, byrow = TRUE)
+    filters <- matrix(c("All files", "*", "Text", ".txt", "TCR Files", "*TCR.txt", "deg Files", "*deg.txt"),4, 2, byrow = TRUE)
     fileSelected <- SelectFilesAdvanced(filters)
 
     # Remove the deg or TCR part and keep only one occurence of each name
