@@ -4,11 +4,11 @@
 ###    ---------------------------------                                     ###
 ###                                                                          ###
 ###       MODULE NAME         resistor.r                                     ###
-###       VERSION             0.1                                            ###
+###       VERSION             0.10                                           ###
 ###                                                                          ###
 ###       AUTHOR              Emmanuel Chery                                 ###
 ###       MAIL                emmanuel.chery@ams.com                         ###
-###       DATE                2016/01/18                                     ###
+###       DATE                2016/02/24                                     ###
 ###       PLATFORM            Windows 7 & Gnu/Linux 3.16                     ###
 ###       R VERSION           R 3.2.3                                        ###
 ###                                                                          ###
