@@ -47,11 +47,11 @@
 #' @return None
 #'
 #' @examples
-#' amsReliability()
+#' RelAnalysis()
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
 #' @import ggplot2 MASS scales nlstools tcltk
 #' @export
-amsReliability <- function()
+RelAnalysis <- function()
 {
     # Main windows
     tt <- tktoplevel()
