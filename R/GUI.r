@@ -49,7 +49,7 @@
 #' @examples
 #' RelAnalysis()
 #' @author Emmanuel Chery, \email{emmanuel.chery@@ams.com}
-#' @import ggplot2 MASS scales nlstools tcltk
+#' @import ggplot2 MASS scales nlstools tcltk devtools
 #' @export
 RelAnalysis <- function()
 {
