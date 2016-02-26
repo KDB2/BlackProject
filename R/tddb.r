@@ -240,3 +240,27 @@ OxideTDDB <- function(ErrorBand=FALSE, ConfidenceValue=0.95, Save=TRUE)
     # Warning are set on again.
     options(warn = oldw)
 }
+
+
+VBDAnalysis <- function()
+{
+    # Select file to be Analyzed
+    listFiles <- SelectFilesAdvanced()
+
+    dataTable <- ReadDataVBD(file)
+
+}
+
+
+
+ReadDataVBD <- function(listFiles)
+{
+    startLine <- grep('DATA]', readLines(fileName))
+    colNames <- names(read.delim(fileName, skip = startLine, nrow = 1))
+
+    dataTable <- read.delim(fileName, skip = startLine+2, header = FALSE)
+    names(dataTable) <- colNames
+    dataTable <- dataTable[,-34:-37]
+
+    dataTable$Lot <- grep(dataTable$Wafer, pattern="^[EC][0-9]{5}")
+}
