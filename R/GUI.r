@@ -75,19 +75,12 @@ RelAnalysis <- function()
     fileMenu <- tkmenu(topMenu, tearoff=FALSE)
     tkadd(fileMenu,"command",label="Quit",command=function() tkdestroy(tt))
     tkadd(topMenu,"cascade",label="File",menu=fileMenu)
-    # About & Update Menu
+    # About: Update
     about <- tkmenu(topMenu, tearoff=FALSE)
-    tkadd(about,"command",label="Update",
-          command=function() {AutoUpdate(); tkdestroy(tt); RelAnalysis()}) # reload GUI after update.
-
-    boxFont <- tkfont.create(size=10,weight ="bold")
-    boxText <- tklabel(about, text="Welcome in amsReliability!")
-    tkadd(about,"command",label="About",
-          command=function()
-                tkmessageBox(title="About",
-                            message=paste("\n            amsReliability ", packageVersion("amsReliability"),"\n\n   \"Reliability Data Analysis Tool\"\n\n\n\nEmmanuel Chery\t(2015--2016)",sep=""),
-                            icon="info"))
-    tkadd(topMenu,"cascade",label="Help",menu=about)
+    tkadd(about,"command", label="Update", command=UpdateQuestionBox)
+    # About: About
+    tkadd(about,"command", label="About", command=AboutBox)
+    tkadd(topMenu,"cascade", label="Help", menu=about)
 
     tkfocus(tt)
 
@@ -203,6 +196,7 @@ RelAnalysis <- function()
 
 
 AutoUpdate <- function()
+# Allow amsReliability to be updated from the menu.
 {
     print("AutoUpdate ongoing")
     library(devtools)
@@ -211,4 +205,25 @@ AutoUpdate <- function()
     detach("package:amsReliability", unload=TRUE)
     library("amsReliability")
     return()
+}
+
+
+UpdateQuestionBox <- function()
+# Handle a last warning box before proceeding with the upgrade of amsReliability
+{
+    userChoice <- tclvalue(tkmessageBox(title = "Warning", message = "Do you want to upgrade amsReliability package?", icon = "warning", type = "yesno", default = "no"))
+    if (userChoice == "yes"){
+        AutoUpdate()
+        tkdestroy(tt)
+        RelAnalysis() # Reload after update
+    }
+}
+
+AboutBox <- function()
+# Display the about informations
+{
+    tkmessageBox(title="About",
+                message=paste("\n            amsReliability ", packageVersion("amsReliability"),
+                            "\n\n   \"Reliability Data Analysis Tool\"\n\n\n            Emmanuel Chery\n                (2015--2016)",sep=""),
+                icon="info")
 }
