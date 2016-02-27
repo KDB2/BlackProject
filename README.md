@@ -29,6 +29,8 @@
 - [ ] Find a way to store model in a file and directly call them. Avoid hard coding the models in the functions. Avoid redundancy (error prone). Ex: Black and TDDB lifetime.
 - [ ] plyr strategie (split apply combine) on data with multiple structures inside the table?
 - [ ] avoid loop in function where a list of files is given. Try to use apply
+- [ ] Create a function to compare experiments (by conditions, by wafer, by lot...)
+- [ ] Create a function to save an exportfile corrected by a lifetime factor (useful to merge several wafer in 1 lot.)
 
 
 
@@ -38,6 +40,11 @@
   - [ ] Model parameters <- addressed with annotate + clipping off (2nd table)
   - [x] Minimum 3 decades per charts
   - [x] Revert renaming CreateGraph function.
-  - [ ] Create new function for axis setting definition: deg scale or proba scale / linear or log scale
+  - [x] Create new function for axis setting definition: deg scale or proba scale / linear or log scale
+
+## GUI:
+- [x] Create a small GUI to select the analysis to be performed
+- [x] Add an update function to the GUI in order to update the package.
+- [ ] Add a close after analysis check box.
 
 ## Documentation:
