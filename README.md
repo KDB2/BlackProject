@@ -28,7 +28,7 @@
 - [ ] Copy the structure file locally (dimension of EM structures) and make comparison with time stamps. Would allow working without network.
 - [ ] Find a way to store model in a file and directly call them. Avoid hard coding the models in the functions. Avoid redundancy (error prone). Ex: Black and TDDB lifetime.
 - [ ] plyr strategie (split apply combine) on data with multiple structures inside the table?
-- [ ] avoid loop in function where a list of files is given. Try to use apply
+- [ ] Use ldply to read a list of file instead of for loops.
 - [ ] Create a function to compare experiments (by conditions, by wafer, by lot...)
 - [ ] Create a function to save an exportfile corrected by a lifetime factor (useful to merge several wafer in 1 lot.)
 
