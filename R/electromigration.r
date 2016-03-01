@@ -369,8 +369,10 @@ AdjustCensor <- function(DataTable)
     listConditions <- levels(as.factor(DataTable$Conditions))
 
     for (cond in listConditions){
-        minTimeOngoingSample <- min(DataTable$TTF[DataTable$Status==0 & DataTable$Conditions == cond])
-        DataTable$Status[DataTable$Status==1 & DataTable$TTF > minTimeOngoingSample & DataTable$Conditions == cond] <- 0
+        if (dim(DataTable[DataTable$Status==0 & DataTable$Conditions == cond, ])[1] > 0){ # if nb row above 0, we proceed.
+            minTimeOngoingSample <- min(DataTable$TTF[DataTable$Status==0 & DataTable$Conditions == cond])
+            DataTable$Status[DataTable$Status==1 & DataTable$TTF > minTimeOngoingSample & DataTable$Conditions == cond] <- 0
+        }
     }
 
     return(DataTable)
