@@ -313,13 +313,13 @@ ModelFit <- function(dataTable, Law="BlackLaw")
 }
 
 
-Ranking <- function(TTF)
+Ranking <- function(x)
 # Fraction estimator calculation
 # rk(i)=(i-0.3)/(n+0.4)
-# TTF is a vector.
+# x is a vector.
 {
     # ties.method="random" handles identical TTFs and provide a unique ID
-    rk <- (rank(TTF, ties.method="random")-0.3)/(length(TTF)+0.4)
+    rk <- (rank(x, ties.method="random")-0.3)/(length(x)+0.4)
 }
 
 
