@@ -253,7 +253,7 @@ VBDAnalysis <- function()
 
 
 
-ReadDataVBD <- function(listFiles)
+ReadDataVBD <- function(fileName)
 {
     startLine <- grep('DATA]', readLines(fileName))
     colNames <- names(read.delim(fileName, skip = startLine, nrow = 1))
@@ -262,5 +262,41 @@ ReadDataVBD <- function(listFiles)
     names(dataTable) <- colNames
     dataTable <- dataTable[,-34:-37]
 
-    dataTable$Lot <- grep(dataTable$Wafer, pattern="^[EC][0-9]{5}")
+    # keepNames <-  c("DevName", "Wafer", "I_INIT", "VBD.V.", "MODE", "LEAKN.A.", "LEAKP.A.", "LIFETIME.S.", "AREA.UM.2.", "IBD.PA.UM.2.", "IUSEPOST.A.",
+        # "LP_DEVICE", "LP_AREA", "LP_STI_DIFF", "LP_PERIMETER_DIFF", "LP_PERIMETER_STI", "LP_PERIMETER_PERIM", "LP_DEVICE_LENGTH", "LP_DEVICE_WIDTH")
+
+    # dataTable <- dataTable[, names(dataTable) %in% keepNames]
+    dataTable <- dataTable[!dataTable$MODE == 1,]
+    # absolute value for VBD
+    dataTable[["VBD.V."]] <- abs(dataTable[["VBD.V."]])
+
+    names(dataTable) <- sub("^Wafer$", "WaferID", names(dataTable))
+    dataTable$Lot <- str_extract(dataTable$WaferID,  "^[EC][0-9]{5}")
+    dataTable$Wafer <- str_extract(dataTable$WaferID,  "[W][0-9]{2}")
+    dataTable$Probability <- 100
+
+
+    for (wafer in levels(dataTable$WaferID)){
+        for (device in levels(as.factor(dataTable$DevName))){
+            dataTable$Probability[dataTable$DevName == device & dataTable$WaferID == wafer] <- CalculProbability(
+                                    Ranking(dataTable[["VBD.V."]][dataTable$DevName == device & dataTable$WaferID == wafer])
+                                    , Scale="Weibull")
+
+        }
+    }
+
+for (lotNum in levels(as.factor(dataTable$Lot))){
+    for (device in levels(as.factor(dataTable$DevName))){
+        # namePattern <- grep(pattern = "^LP_[SD]", names(dataTable), value=TRUE) # TEMPORARY FIX
+        namePattern <- grep(pattern = "(LP_STRUCTURE$)|(LP_DEVICE$)", names(dataTable), value=TRUE)
+        titleChart <- paste(as.character(lotNum), as.character(dataTable[[namePattern]][dataTable$DevName == device][1]), sep= " ")
+        # titleChart <- paste(as.character(lotNum), as.character(dataTable$LP_DEVICE[dataTable$DevName == device][1]), sep= " ")
+        CreateGraph(dataTable[dataTable$DevName == device & dataTable$Lot == lotNum,], aesVec = c("VBD.V.", "Probability", "Wafer"), title=titleChart, axisTitles = c("Breakdown Voltage (V)"," Probability (%)"),
+        scale.x = "Lin", scale.y="Weibull", save=FALSE)
+    }
+}
+    return(dataTable)
+
+
+
 }
