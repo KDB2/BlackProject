@@ -42,11 +42,15 @@ CompareEMLifeTime <- function()
     ModelDataTable <- rbind(ModelTableChild,ModelTableMother)
 
     # Error Data frame
-    ErrorTable <- ErrorEstimation(SubDataTableMother, ModelTableMother, ConfidenceValue=0.95, Scale="Lognormal")
-    ErrorTable$Conditions <- RefDeviceID
+    # ErrorTable <- ErrorEstimation(SubDataTableMother, ModelTableMother, ConfidenceValue=0.95, Scale="Lognormal")
+    # ErrorTable$Conditions <- RefDeviceID
 
     # Graph
-    CreateGraph(DataTable, ModelDataTable, ErrorTable, Title="", Scale="Lognormal", ErrorBands=TRUE, Save=FALSE)
+
+    CreateGraph(DataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"),
+                title="", axisTitles = c("Time to Failure (s)","Probability (%)"),
+                scale.x = "Log", scale.y="Lognormal", save=TRUE)
+
     # Lifetime ratio
     lifetimeRatio <- MeanLifetimeRatio(ModelTableMother$TTF, DataTableChild$TTF[DataTableChild$Status==1], Scale="lognormal")
     print(paste("Mean lifetime ratio:", lifetimeRatio, sep=' '))
@@ -69,4 +73,19 @@ MeanLifetimeRatio <- function(DataRef, DataComparison, Scale="lognormal")
         ratio <- as.numeric( exp(fitComp$estimate[1])/exp(fitRef$estimate[1]) )
     }
     return(ratio)
+}
+
+
+PlotComparisonChart <- function()
+# Perform a lifetime analysis given the name of the related structure
+{
+
+
+
+    # Graph
+
+    CreateGraph(DataTable, ModelDataTable, aesVec = c("TTF", "Probability", "Conditions"),
+                title="", axisTitles = c("Time to Failure (s)","Probability (%)"),
+                scale.x = "Log", scale.y="Lognormal", save=TRUE)
+
 }
