@@ -297,32 +297,46 @@ BlackModelization.me <- function(DataTable, DeviceID)
           # Remove the units where status is 0
           CleanDataTable <- DataTable[DataTable$Status==1,]
 
-          B.f <- deriv(~log(exp(A)*(Stress*1E-3/1)^(-n)*exp((Ea*1.6E-19)/(1.38E-23*(Temperature+273.15))+Scale*Probability))/log(10),namevec = c('A','Ea','n','Scale'), function.arg = c('A','Ea','n','Scale','Stress', 'Temperature','Probability'))
-          y = log10(DataTable$TTF)
-          fit.nlmer <- nlmer(log10(y) ~ B.f(A,Ea,n,Scale,Stress, Temperature,Probability) ~ Temperature | Conditions, start=list(nlpars=c(A=30,Ea=0.7,n=2,Scale=0.3)), data=DataTable)
-          summary(fit.nlmer)
+          B.f <- deriv(~log(exp(A)*(Stress*1E-3/12.54E-12)^(-n)*exp((Ea*1.6E-19)/(1.38E-23*(Temperature+273.15))+Scale*Probability))/log(10),namevec = c('A','Ea','n','Scale'), function.arg = c('A','Ea','n','Scale','Stress', 'Temperature','Probability'))
+          y <- log10(DataTable$TTF)
+        #  Model <- nlmer(log10(TTF) ~ B.f(A,Ea,n,Scale,Stress, Temperature,Probability) ~ Temperature | Conditions, start=list(nlpars=c(A=30,Ea=0.7,n=2,Scale=0.3)), data=DataTable)
+        Model <- nlmer(log10(TTF) ~ B.f(A,Ea,n,Scale,Stress, Temperature,Probability) ~ Temperature | Stress, start=list(nlpars=c(A=30,Ea=0.7,n=2,Scale=0.3)), data=DataTable)
+          #Model <- nlmer(log10(TTF) ~ B.f(A,Ea,n,Scale,Stress, Temperature,Probability) ~ Temperature | Sample , start=list(nlpars=c(A=30,Ea=0.7,n=2,Scale=0.3)), data=DataTable)
+          print(summary(Model))
+          print(coef(Model))
+          print(paste("AIC:", AIC(Model), sep=" "))
 
+        #ModCoef <- coef(Model)$Sample[1,]
+        #  ModCoef <-  coef(Model)$Condition[1,]
+         ModCoef <-  coef(Model)$Stress[1,]
+        ModCoef$Temperature <- NULL
 
-          # Parameters Extraction
-          A <- coef(Model)[1]
-          n <- coef(Model)[2]
-          Ea <-coef(Model)[3]
-          Scale <- coef(Model)[4]
-          # Residual Sum of Squares
-          RSS <- sum(resid(Model)^2)
-          # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
-          TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
-          Rsq <- 1-RSS/TSS # R-squared measure
+        A <- ModCoef$A
+        n <- ModCoef$n
+        Ea <- ModCoef$Ea
+        Scale <- ModCoef$Scale
+
+        #   # Parameters Extraction
+        #   A <- coef(Model)[1]
+        #   n <- coef(Model)[3]
+        #   Ea <-coef(Model)[2]
+        #   Scale <- coef(Model)[4]
+        #   # Residual Sum of Squares
+           RSS <- sum(resid(Model)^2)
+           print(paste("RSS:", RSS, sep=' '))
+        #   # Total Sum of Squares: TSS <- sum((TTF - mean(TTF))^2))
+        #   TSS <- sum(sapply(split(CleanDataTable[,1],CleanDataTable$Conditions),function(x) sum((x-mean(x))^2)))
+        #   Rsq <- 1-RSS/TSS # R-squared measure
           #print(paste("Size on 150 rows:", format(object.size(Model), unit="Mb")))
 
-          # Using the parameters and the conditions, theoretical distributions are created
-          ListConditions <- levels(CleanDataTable$Conditions)
-
-          # Initialisation
-          ModelDataTable <- data.frame()
-          # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
-          Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
-
+        #   # Using the parameters and the conditions, theoretical distributions are created
+           ListConditions <- levels(CleanDataTable$Conditions)
+          #
+        #   # Initialisation
+           ModelDataTable <- data.frame()
+        #   # y axis points are calculated. (limits 0.01% -- 99.99%) Necessary to have nice confidence bands.
+           Proba <- seq(qnorm(0.0001),qnorm(0.9999),0.05)
+          #
           for (i in seq_along(ListConditions)){
               # Experimental conditions:
               Condition <- ListConditions[i]
@@ -336,24 +350,30 @@ BlackModelization.me <- function(DataTable, DeviceID)
               ModelDataTable <- rbind(ModelDataTable, data.frame('TTF'=TTF,'Status'=1,'Probability'=Proba,'Conditions'=Condition,'Stress'=I,'Temperature'=Temp))
           }
 
-          # Drawing of the residual plots
-          plot(nlsResiduals(Model))
-          # Display of fit results
-          print(DeviceID)
-          print(summary(Model))
-          print(paste("Residual squared sum: ",RSS,sep=""))
-          #print(coef(Model))
-          #print(sd(resid(Model)))
+        #   # Drawing of the residual plots
+        #   plot(nlsResiduals(Model))
+        #   # Display of fit results
+        #   print(DeviceID)
+        #   print(summary(Model))
+        #   print(paste("Residual squared sum: ",RSS,sep=""))
+        #   #print(coef(Model))
+        #   #print(sd(resid(Model)))
+          #
+        #   # Save in a file
+        #   capture.output(summary(Model),file="fit.txt")
+        #   cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
+        #   cat(RSS,file="fit.txt",append=TRUE)
+        #   cat("\n \n",file="fit.txt",append=TRUE)
+        #   cat("Experimental Data:",file="fit.txt",append=TRUE)
+        #   cat("\n",file="fit.txt",append=TRUE)
+        #   capture.output(DataTable,file="fit.txt",append=TRUE)
+        #   return(ModelDataTable)
 
-          # Save in a file
-          capture.output(summary(Model),file="fit.txt")
-          cat("Residual Squared sum:\t",file="fit.txt",append=TRUE)
-          cat(RSS,file="fit.txt",append=TRUE)
-          cat("\n \n",file="fit.txt",append=TRUE)
-          cat("Experimental Data:",file="fit.txt",append=TRUE)
-          cat("\n",file="fit.txt",append=TRUE)
-          capture.output(DataTable,file="fit.txt",append=TRUE)
-          return(ModelDataTable)
+        CreateGraph(dataExp = CleanDataTable, ModelDataTable, ConfidenceDataTable = NULL,
+                        aesVec = c("TTF", "Probability", "Conditions"), title="", axisTitles = c("TTF","Proba"),
+                        scale.x = "Log", scale.y="Lognormal", save=FALSE)
+
+         return(Model)
         }
     }
 }
